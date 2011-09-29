@@ -18,10 +18,6 @@
  * limitations under the License.
  * ========================================================== */
 
-/*
- * Ender support requires: qwery (or other selector engine) domready bowser bonzo bean valentine
- * Note that bean does not currently support the 'live' option.
- */
 
 !function( $ ) {
 
@@ -133,7 +129,7 @@
       $tip.removeClass('in')
 
       function removeElement () {
-    	$tip.unbind(transitionEnd, removeElement)
+        $tip.unbind(transitionEnd, removeElement)
         $tip.remove()
       }
 
@@ -312,5 +308,3 @@
   }
 
 }( window.jQuery || window.ender );
-window.ender && ender.ender(ender.fn, true);
-	
