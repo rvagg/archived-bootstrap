@@ -16,6 +16,7 @@ $("a[rel=twipsy]").twipsy({ live: true })
 won't work for example because we don't have `live()` in bean yet. Just call `twipsy()` and it'll work.
 
 **Rod Vagg**
+
 + http://twitter.com/rvagg
 + http://github.com/rvagg
 
