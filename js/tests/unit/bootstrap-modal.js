@@ -1,4 +1,4 @@
-$(function () {
+(function () {
 
   module("bootstrap-modal")
 
@@ -148,4 +148,4 @@ $(function () {
          })
          .modal("show")
      })
-})
+})()

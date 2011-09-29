@@ -59,12 +59,13 @@
   Alert.prototype = {
 
     close: function (e) {
-      var $element = $(this).parent('.alert-message')
+      var $element = $(this).closest('.alert-message')
 
       e && e.preventDefault()
       $element.removeClass('in')
 
       function removeElement () {
+        $element.unbind(transitionEnd, removeElement)
         $element.remove()
       }
 
