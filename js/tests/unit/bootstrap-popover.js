@@ -1,4 +1,4 @@
-(function () {
+$(document).ready(function () {
 
     module("bootstrap-popover")
 
@@ -73,4 +73,4 @@
         $('#qunit-runoff').empty()
       })
 
-})()
+})

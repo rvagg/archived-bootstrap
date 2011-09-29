@@ -1,4 +1,4 @@
-(function () {
+$(document).ready(function () {
 
     module("bootstrap-alerts")
 
@@ -38,4 +38,4 @@
         ok(!$('#qunit-runoff').find('.alert-message').length, 'element removed from dom')
       })
 
-})()
+})

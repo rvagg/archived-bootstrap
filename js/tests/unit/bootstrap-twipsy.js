@@ -1,4 +1,4 @@
-(function () {
+$(document).ready(function () {
 
     module("bootstrap-twipsy")
 
@@ -78,4 +78,4 @@
         $('#qunit-runoff').empty()
       })
 
-})()
+})

@@ -1,4 +1,4 @@
-(function () {
+$(document).ready(function () {
 
     module("bootstrap-scrollspy")
 
@@ -28,4 +28,4 @@
         ok(topbar.find('.active', true)
       })
 
-})()
+})

@@ -1,4 +1,4 @@
-(function () {
+$(document).ready(function () {
 
     module("bootstrap-tabs")
 
@@ -46,4 +46,4 @@
         $("#qunit-runoff").empty()
       })
 
-})()
+})

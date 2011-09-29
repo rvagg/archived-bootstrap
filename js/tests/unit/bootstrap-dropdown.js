@@ -1,4 +1,4 @@
-(function () {
+$(document).ready(function () {
 
     module("bootstrap-dropdowns")
 
@@ -49,4 +49,4 @@
         dropdown.remove()
       })
 
-})()
+})
