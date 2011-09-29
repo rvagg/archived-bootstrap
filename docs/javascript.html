@@ -12,16 +12,10 @@
     <![endif]-->
 
     <!-- Le javascript -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+    <script src="../js/tests/vendor/ender.js"></script>
+    <script src="../js/bootstrap-ender.js"></script>
     <script src="assets/js/google-code-prettify/prettify.js"></script>
     <script>$(function () { prettyPrint() })</script>
-    <script src="../js/bootstrap-modal.js"></script>
-    <script src="../js/bootstrap-alerts.js"></script>
-    <script src="../js/bootstrap-twipsy.js"></script>
-    <script src="../js/bootstrap-popover.js"></script>
-    <script src="../js/bootstrap-dropdown.js"></script>
-    <script src="../js/bootstrap-scrollspy.js"></script>
-    <script src="../js/bootstrap-tabs.js"></script>
 
     <!-- Le styles -->
     <link href="../bootstrap.css" rel="stylesheet">
@@ -489,9 +483,8 @@ $('#my-modal').bind('hidden', function () {
             </p>
           </div>
           <script>
-            $(function () {
+            $(document).ready(function () {
               $("a[rel=twipsy]").twipsy({
-                live: true
               })
             })
           </script>
@@ -605,7 +598,7 @@ $('#my-modal').bind('hidden', function () {
           <h3>Demo</h3>
           <a href="#" class="btn danger" rel="popover" title="A Title" data-content="And here's some amazing content. It's very engaging. right?">hover for popover</a>
           <script>
-            $(function () {
+            $(document).ready(function () {
               $("a[rel=popover]")
                 .popover({
                   offset: 10
