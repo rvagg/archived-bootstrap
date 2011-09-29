@@ -1,3 +1,9 @@
+//==============================================================//
+// TWITTER BOOTSTRAP FOR ENDER                                  //
+
+!(function() {
+	var _bind = function(fn, ctx) { return function() { fn.apply(ctx, arguments) } }
+
 /* ==========================================================
  * bootstrap-alerts.js v1.3.0
  * http://twitter.github.com/bootstrap/javascript.html#alerts
@@ -65,7 +71,7 @@
       $element.removeClass('in')
 
       function removeElement () {
-	$element.unbind(transitionEnd, removeElement);
+        $element.unbind(transitionEnd, removeElement)
         $element.remove()
       }
 
@@ -102,7 +108,9 @@
     new Alert($('body'), '.alert-message[data-alert] .close')
   })
 
-}( window.jQuery || window.ender );/* ============================================================
+}( window.jQuery || window.ender );
+
+/* ============================================================
  * bootstrap-dropdown.js v1.3.0
  * http://twitter.github.com/bootstrap/javascript.html#dropdown
  * ============================================================
@@ -146,14 +154,17 @@
 
         clearMenus()
         !isActive && li.toggleClass('open')
-        e.preventDefault();
-        e.stopPropagation();
+
+        e.preventDefault()
+        e.stopPropagation()
         return false
       })
     })
   }
 
-}( window.jQuery || window.ender );/* =========================================================
+}( window.jQuery || window.ender );
+
+/* =========================================================
  * bootstrap-modal.js v1.3.0
  * http://twitter.github.com/bootstrap/javascript.html#modal
  * =========================================================
@@ -179,7 +190,6 @@
   * ======================================================= */
 
   var transitionEnd
-    _bind = function(fn, ctx) { return function() { fn.apply(ctx, arguments) } }
 
   $(document).ready(function () {
 
@@ -266,8 +276,8 @@
           .removeClass('in')
 
         function removeElement () {
-          that.$element.unbind(transitionEnd, removeElement)
           that.$element
+            .unbind(transitionEnd, removeElement)
             .hide()
             .trigger('hidden')
 
@@ -310,6 +320,7 @@
         that.$backdrop.unbind(transitionEnd, cb)
         callback()
       }
+
       doAnimate ?
         this.$backdrop.bind(transitionEnd, cb) :
         callback()
@@ -318,8 +329,9 @@
       this.$backdrop.removeClass('in')
 
       function removeElement() {
-        that.$backdrop.unbind(transitionEnd, removeElement)
-        that.$backdrop.remove()
+        that.$backdrop
+          .unbind(transitionEnd, removeElement)
+          .remove()
         that.$backdrop = null
       }
 
@@ -397,7 +409,9 @@
     })
   })
 
-}( window.jQuery || window.ender );/* ========================================================
+}( window.jQuery || window.ender );
+
+/* ========================================================
  * bootstrap-tabs.js v1.3.0
  * http://twitter.github.com/bootstrap/javascript.html#tabs
  * ========================================================
@@ -458,7 +472,9 @@
     $('body').tabs('ul[data-tabs] li > a, ul[data-pills] > li > a')
   })
 
-}( window.jQuery || window.ender );/* ==========================================================
+}( window.jQuery || window.ender );
+
+/* ==========================================================
  * bootstrap-twipsy.js v1.3.0
  * http://twitter.github.com/bootstrap/javascript.html#twipsy
  * Adapted from the original jQuery.tipsy by Jason Frame
@@ -768,6 +784,7 @@
   }
 
 }( window.jQuery || window.ender );
+
 /* ===========================================================
  * bootstrap-popover.js v1.3.0
  * http://twitter.github.com/bootstrap/javascript.html#popover
@@ -845,7 +862,6 @@
   $.fn.popover.defaults = $.extend({} , $.fn.twipsy.defaults, { content: 'data-content', placement: 'right'})
 
 }( window.jQuery || window.ender );
-
 /* =============================================================
  * bootstrap-scrollspy.js v1.3.0
  * http://twitter.github.com/bootstrap/javascript.html#scrollspy
@@ -871,8 +887,7 @@
   var $window = $(window)
 
   function ScrollSpy( topbar, selector ) {
-    var _bind = function(fn, ctx) { return function() { fn.apply(ctx, arguments) } },
-      processScroll = _bind(this.processScroll, this)
+    var processScroll = _bind(this.processScroll, this)
     this.$topbar = $(topbar)
     this.selector = selector || 'li > a'
     this.refresh()
@@ -953,6 +968,7 @@
 
 }( window.jQuery || window.ender );
 
+
 ender.ender({
 	alert: ender.fn. alert,
 	dropdown: ender.fn.dropdown,
@@ -962,3 +978,5 @@ ender.ender({
 	popover: ender.fn.popover,
 	scrollSpy: ender.fn.scrollSpy
 }, true);
+
+})()

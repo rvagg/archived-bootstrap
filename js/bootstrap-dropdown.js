@@ -23,10 +23,10 @@
   var d = 'a.menu, .dropdown-toggle'
 
   function clearMenus() {
-    $(d).parent('li').removeClass('open')
+    $(d).closest('li').removeClass('open')
   }
 
-  $(function () {
+  $(document).ready(function () {
     $('html').bind("click", clearMenus)
     $('body').dropdown( '[data-dropdown] a.menu, [data-dropdown] .dropdown-toggle' )
   })
@@ -37,11 +37,14 @@
   $.fn.dropdown = function ( selector ) {
     return this.each(function () {
       $(this).delegate(selector || d, 'click', function (e) {
-        var li = $(this).parent('li')
+        var li = $(this).closest('li')
           , isActive = li.hasClass('open')
 
         clearMenus()
         !isActive && li.toggleClass('open')
+
+        e.preventDefault()
+        e.stopPropagation()
         return false
       })
     })

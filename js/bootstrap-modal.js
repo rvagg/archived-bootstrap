@@ -55,7 +55,7 @@
   var Modal = function ( content, options ) {
     this.settings = $.extend({}, $.fn.modal.defaults)
     this.$element = $(content)
-      .delegate('.close', 'click.modal', $.proxy(this.hide, this))
+      .delegate('.close', 'click.modal', _bind(this.hide, this))
 
     if ( options ) {
       $.extend( this.settings, options )
@@ -111,6 +111,7 @@
 
         function removeElement () {
           that.$element
+            .unbind(transitionEnd, removeElement)
             .hide()
             .trigger('hidden')
 
@@ -118,7 +119,7 @@
         }
 
         $.support.transition && this.$element.hasClass('fade') ?
-          this.$element.one(transitionEnd, removeElement) :
+          this.$element.bind(transitionEnd, removeElement) :
           removeElement()
 
         return this
@@ -140,7 +141,7 @@
         .appendTo(document.body)
 
       if ( this.settings.backdrop != 'static' ) {
-        this.$backdrop.click($.proxy(this.hide, this))
+        this.$backdrop.click(_bind(this.hide, this))
       }
 
       if ( doAnimate ) {
@@ -149,20 +150,27 @@
 
       this.$backdrop.addClass('in')
 
+      var cb = function() {
+        that.$backdrop.unbind(transitionEnd, cb)
+        callback()
+      }
+
       doAnimate ?
-        this.$backdrop.one(transitionEnd, callback) :
+        this.$backdrop.bind(transitionEnd, cb) :
         callback()
 
     } else if ( !this.isShown && this.$backdrop ) {
       this.$backdrop.removeClass('in')
 
       function removeElement() {
-        that.$backdrop.remove()
+        that.$backdrop
+          .unbind(transitionEnd, removeElement)
+          .remove()
         that.$backdrop = null
       }
 
       $.support.transition && this.$element.hasClass('fade')?
-        this.$backdrop.one(transitionEnd, removeElement) :
+        this.$backdrop.bind(transitionEnd, removeElement) :
         removeElement()
     } else if ( callback ) {
        callback()

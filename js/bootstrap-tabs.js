@@ -40,8 +40,8 @@
 
       $href = $(href)
 
-      activate($this.parent('li'), $ul)
-      activate($href, $href.parent())
+      activate($this.closest('li'), $ul)
+      activate($href, $($href[0].parentNode))
     }
   }
 
