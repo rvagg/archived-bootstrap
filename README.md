@@ -7,13 +7,34 @@ Changes can be seen here: https://github.com/rvagg/bootstrap/compare/master...en
 
 Requires an Ender build with qwery, bonzo, bean, bowser, domready & valentine
 
-So far most of it is working except for **Modals**. There are some use cases that aren't supported as well:
+So far most of it is working except for **Modals** (if you need Modals then clone this baby and fix it!).
+
+There are some use cases that aren't supported as well:
 
 ```js
 $("a[rel=twipsy]").twipsy({ live: true })
 ```
 
 won't work for example because we don't have `live()` in bean yet. Just call `twipsy()` and it'll work.
+
+See docs/javascript.html for an updated example using the Ender version and for details on what changes were made
+to get it working see the diff: https://github.com/rvagg/bootstrap/compare/master...ender#diff-1
+
+Installing
+----------
+
+You can install this directly into an ender build with:
+
+```
+ender build ender-twitter-bootstrap
+```
+
+and you'll get the dependencies packed too.
+
+Alternatively you'll find a *build.sh* script in the *js* directory that you can use to build *bootstrap-ender.js* yourself.
+
+Me
+--
 
 **Rod Vagg**
 
