@@ -1,87 +1,29 @@
-TWITTER BOOTSTRAP
-=================
+TWITTER BOOTSTRAP FOR ENDER
+===========================
 
-Bootstrap is Twitter's toolkit for kickstarting CSS for websites, apps, and more. It includes base CSS styles for typography, forms, buttons, tables, grids, navigation, alerts, and more.
+This is a simple fork of https://github.com/twitter/bootstrap with some changes to support Ender without jQuery.
 
-To get started -- checkout http://twitter.github.com/bootstrap!
+Changes can be seen here: https://github.com/rvagg/bootstrap/compare/master...ender
 
+Requires an Ender build with qwery, bonzo, bean, bowser, domready & valentine
 
-Usage
------
+So far most of it is working except for **Modals**. There are some use cases that aren't supported as well:
 
-You can use Twitter Bootstrap in one of two ways: just drop the compiled CSS into any new project and start cranking, or run LESS on your site and compile on the fly like a boss.
-
-Here's what the LESS version looks like:
-
-``` html
-<link rel="stylesheet/less" type="text/css" href="lib/bootstrap.less">
-<script src="less.js" type="text/javascript"></script>
+```js
+$("a[rel=twipsy]").twipsy({ live: true })
 ```
 
-Or if you prefer, the standard css way:
+won't work for example because we don't have `live()` in bean yet.
 
-``` html
-<link rel="stylesheet" type="text/css" href="bootstrap.css">
-```
-
-For more info, refer to the docs!
+**Rod Vagg**
++ http://twitter.com/rvagg
++ http://github.com/rvagg
 
 
-Versioning
-----------
+ORIGINAL BOOTSTRAP INFO
+=======================
 
-For transparency and insight into our release cycle, and for striving to maintain backwards compatibility, Bootstrap will be maintained under the Semantic Versioning guidelines as much as possible.
-
-Releases will be numbered with the follow format:
-
-`<major>.<minor>.<patch>`
-
-And constructed with the following guidelines:
-
-* Breaking backwards compatibility bumps the major
-* New additions without breaking backwards compatibility bumps the minor
-* Bug fixes and misc changes bump the patch
-
-For more information on SemVer, please visit http://semver.org/.
-
-
-Bug tracker
------------
-
-Have a bug? Please create an issue here on GitHub!
-
-https://github.com/twitter/bootstrap/issues
-
-
-Twitter account
----------------
-
-Keep up to date on announcements and more by following Bootstrap on Twitter, <a href="http://twitter.com/TwBootstrap">@TwBootstrap</a>.
-
-
-Mailing list
-------------
-
-Have a question? Ask on our mailing list!
-
-twitter-bootstrap@googlegroups.com
-
-http://groups.google.com/group/twitter-bootstrap
-
-
-Developers
-----------
-
-We have included a makefile with convenience methods for working with the bootstrap library.
-
-+ **build** - `make build`
-This will run the less compiler on the bootstrap lib and generate a bootstrap.css and bootstrap.min.css file.
-The lessc compiler is required for this command to run.
-
-+ **watch** - `make watch`
-This is a convenience method for watching your less files and automatically building them whenever you save.
-Watchr is required for this command to run.
-
+(Please visit https://github.com/twitter/bootstrap for complete info)
 
 Authors
 -------
