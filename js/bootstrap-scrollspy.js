@@ -36,7 +36,7 @@
 
       refresh: function () {
         this.targets = this.$topbar.find(this.selector).map(function (e) {
-          var href = $(e).attr('href')
+          var href = e.getAttribute('href', 2)
           return /^#\w/.test(href) && $(href).length ? href : null
         })
 

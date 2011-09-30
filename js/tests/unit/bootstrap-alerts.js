@@ -15,11 +15,13 @@ $(document).ready(function () {
           + '<a class="close" href="#">×</a>'
           + '<p><strong>Holy guacamole!</strong> Best check yo self, you’re not looking too good.</p>'
           + '</div>'
-          , alert = $(alertHTML).alert()
+          , alert = $(alertHTML).appendTo('#qunit-runoff').alert()
 
         alert.find('.close').click()
 
         ok(!alert.hasClass('in'), 'remove .in class on .close click')
+
+        alert.remove()
       })
 
       test("should remove element when clicking .close", function () {

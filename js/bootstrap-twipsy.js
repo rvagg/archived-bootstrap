@@ -26,8 +26,6 @@
 
   var transitionEnd
 
-  !$.support && ($.support = {})
-
   $(document).ready(function () {
 
     $.support.transition = (function () {

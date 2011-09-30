@@ -2,7 +2,27 @@
 // TWITTER BOOTSTRAP FOR ENDER                                  //
 
 !(function() {
-	var _bind = function(fn, ctx) { return function() { fn.apply(ctx, arguments) } }
+  !$.support && ($.support = {})
+
+  function _bind(fn, ctx) { return function() { fn.apply(ctx, arguments) } }
+
+  function _camelize(s) {
+    return s.replace(/-(.)/g, function (m, m1) { return m1.toUpperCase() })
+  }
+  
+  function _dataValue(d) {
+    try {
+      return d = d === "true" ? true : d === "false" ? false : d === "null" ? null : !isNaN(d) ? parseFloat(d) : d;
+    } catch(e) {}
+    return d
+  }
+  
+  function _data(e) {
+    var d = {}
+    $.each(e.attributes, function(a) { /^data-/.test(a.name) && (d[_camelize((""+a.name).substring(5))] = _dataValue(a.value)) })
+    return d
+  }
+
 
 /* ==========================================================
  * bootstrap-alerts.js v1.3.0
@@ -225,8 +245,7 @@
 
     if ( options ) {
       $.extend( this.settings, options )
-
-      if ( options.show ) {
+      if ( this.settings.show ) {
         this.show()
       }
     }
@@ -341,6 +360,7 @@
     } else if ( callback ) {
        callback()
     }
+
   }
 
   function escape() {
@@ -405,7 +425,7 @@
     $('body').delegate('[data-controls-modal]', 'click', function (e) {
       e.preventDefault()
       var $this = $(this).data('show', true)
-      $('#' + $this.attr('data-controls-modal')).modal( $this.data() )
+      $('#' + $this.attr('data-controls-modal')).modal( _data($this[0]) )
     })
   })
 
@@ -440,7 +460,7 @@
 
   function tab( e ) {
     var $this = $(this)
-      , href = $this.attr('href')
+      , href = $this[0].getAttribute('href', 2)
       , $ul = $this.closest('ul')
       , $controlled
 
@@ -464,7 +484,7 @@
 
   $.fn.tabs = $.fn.pills = function ( selector ) {
     return this.each(function () {
-      $(this).delegate(selector || '.tabs li > a, .pills > li > a', 'click', tab)
+      $(selector || '.tabs li > a, .pills > li > a', this).delegate('click',  tab)
     })
   }
 
@@ -501,8 +521,6 @@
   * ======================================================= */
 
   var transitionEnd
-
-  !$.support && ($.support = {})
 
   $(document).ready(function () {
 
@@ -862,6 +880,7 @@
   $.fn.popover.defaults = $.extend({} , $.fn.twipsy.defaults, { content: 'data-content', placement: 'right'})
 
 }( window.jQuery || window.ender );
+
 /* =============================================================
  * bootstrap-scrollspy.js v1.3.0
  * http://twitter.github.com/bootstrap/javascript.html#scrollspy
@@ -900,7 +919,7 @@
 
       refresh: function () {
         this.targets = this.$topbar.find(this.selector).map(function (e) {
-          var href = $(e).attr('href')
+          var href = e.getAttribute('href', 2)
           return /^#\w/.test(href) && $(href).length ? href : null
         })
 

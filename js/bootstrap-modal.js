@@ -59,8 +59,7 @@
 
     if ( options ) {
       $.extend( this.settings, options )
-
-      if ( options.show ) {
+      if ( this.settings.show ) {
         this.show()
       }
     }
@@ -175,6 +174,7 @@
     } else if ( callback ) {
        callback()
     }
+
   }
 
   function escape() {
@@ -239,7 +239,7 @@
     $('body').delegate('[data-controls-modal]', 'click', function (e) {
       e.preventDefault()
       var $this = $(this).data('show', true)
-      $('#' + $this.attr('data-controls-modal')).modal( $this.data() )
+      $('#' + $this.attr('data-controls-modal')).modal( _data($this[0]) )
     })
   })
 

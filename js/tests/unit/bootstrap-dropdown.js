@@ -22,10 +22,11 @@ $(document).ready(function () {
           + '</ul>'
           + '</li>'
           + '</ul>'
-          , dropdown = $(dropdownHTML).dropdown()
+          , dropdown = $(dropdownHTML).dropdown().appendTo('#qunit-runoff')
 
         dropdown.find('.dropdown-toggle').click()
         ok(dropdown.find('.dropdown').hasClass('open'), 'open class added on click')
+        dropdown.remove()
       })
 
       test("should remove open class if body clicked", function () {

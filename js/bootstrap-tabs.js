@@ -27,7 +27,7 @@
 
   function tab( e ) {
     var $this = $(this)
-      , href = $this.attr('href')
+      , href = $this[0].getAttribute('href', 2)
       , $ul = $this.closest('ul')
       , $controlled
 
@@ -51,7 +51,7 @@
 
   $.fn.tabs = $.fn.pills = function ( selector ) {
     return this.each(function () {
-      $(this).delegate(selector || '.tabs li > a, .pills > li > a', 'click', tab)
+      $(selector || '.tabs li > a, .pills > li > a', this).delegate('click',  tab)
     })
   }
 
