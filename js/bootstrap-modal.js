@@ -53,15 +53,12 @@
   * ============================= */
 
   var Modal = function ( content, options ) {
-    this.settings = $.extend({}, $.fn.modal.defaults)
+    this.settings = $.extend({}, $.fn.modal.defaults, options)
     this.$element = $(content)
       .delegate('.close', 'click.modal', _bind(this.hide, this))
 
-    if ( options ) {
-      $.extend( this.settings, options )
-      if ( this.settings.show ) {
-        this.show()
-      }
+    if ( this.settings.show ) {
+      this.show()
     }
 
     return this
@@ -80,17 +77,25 @@
 
         escape.call(this)
         backdrop.call(this, function () {
+          var transition = $.support.transition && that.$element.hasClass('fade')
+
           that.$element
             .appendTo(document.body)
             .show()
 
-          if ($.support.transition && that.$element.hasClass('fade')) {
+          if (transition) {
             that.$element[0].offsetWidth // force reflow
           }
 
           that.$element
             .addClass('in')
-            .trigger('shown')
+
+         function te() { that.$element.unbind(transitionEnd, te).trigger('shown') }
+
+          transition ?
+            that.$element.bind(transitionEnd, te)
+            : that.$element.trigger('shown')
+
         })
 
         return this
@@ -98,6 +103,10 @@
 
     , hide: function (e) {
         e && e.preventDefault()
+
+        if ( !this.isShown ) {
+          return this
+        }
 
         var that = this
         this.isShown = false
@@ -109,8 +118,8 @@
           .removeClass('in')
 
         function removeElement () {
+          $.support.transition && that.$element.unbind(transitionEnd, removeElement)
           that.$element
-            .unbind(transitionEnd, removeElement)
             .hide()
             .trigger('hidden')
 
@@ -149,14 +158,14 @@
 
       this.$backdrop.addClass('in')
 
-      var cb = function() {
+      function cb() {
         that.$backdrop.unbind(transitionEnd, cb)
         callback()
       }
 
       doAnimate ?
-        this.$backdrop.bind(transitionEnd, cb) :
-        callback()
+        this.$backdrop.bind(transitionEnd, cb)
+        : callback()
 
     } else if ( !this.isShown && this.$backdrop ) {
       this.$backdrop.removeClass('in')
@@ -228,7 +237,7 @@
   $.fn.modal.defaults = {
     backdrop: false
   , keyboard: false
-  , show: true
+  , show: false
   }
 
 

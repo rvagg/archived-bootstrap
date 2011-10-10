@@ -1,7 +1,7 @@
 /*!
   * =============================================================
   * Ender: open module JavaScript framework (https://ender.no.de)
-  * Build: ender build qwery bonzo bean bowser domready valentine
+  * Build: ender build /home/rvagg/git/qwery /home/rvagg/git/bonzo/ bean bowser domready valentine
   * =============================================================
   */
 
@@ -61,7 +61,7 @@
 
   aug(ender, {
       _VERSION: '0.3.4'
-    , fn: context.$ && context.$.fn || {} // for easy compat to jQuery plugins
+    , fn: boosh // for easy compat to jQuery plugins
     , ender: function (o, chain) {
         aug(chain ? boosh : ender, o)
       }
@@ -104,15 +104,15 @@
     */
   
   !function (name, definition) {
-    if (typeof define == 'function') define(definition)
-    else if (typeof module != 'undefined') module.exports = definition()
+    if (typeof module != 'undefined') module.exports = definition()
+    else if (typeof define == 'function' && typeof define.amd == 'object') define(definition)
     else this[name] = definition()
   }('qwery', function () {
     var context = this
       , doc = document
       , old = context.qwery
       , c, i, j, k, l, m, o, p, r, v
-      , el, node, found, classes, item, items, token
+      , el, node, classes, item, items, token
       , html = doc.documentElement
       , id = /#([\w\-]+)/
       , clas = /\.[\w\-]+/g
@@ -242,8 +242,8 @@
     function _qwery(selector) {
       var r = [], ret = [], i, j = 0, k, l, m, p, token, tag, els, root, intr, item, children
         , tokens = tokenCache.g(selector) || tokenCache.s(selector, selector.split(tokenizr))
-        , dividedTokens = selector.match(dividers), dividedToken
-      tokens = tokens.slice(0) // this makes a copy of the array so the cached original is not effected
+        , dividedTokens = selector.match(dividers)
+      tokens = tokens.slice(0) // this makes a copy of the array so the cached original is not affected
   
       if (!tokens.length) return r
   
@@ -253,7 +253,7 @@
       if (!root) return r
   
       intr = q(token)
-      els = dividedTokens && /^[+~]$/.test(dividedTokens[dividedTokens.length - 1]) ? function (r) {
+      els = root.nodeType !== 9 && dividedTokens && /^[+~]$/.test(dividedTokens[dividedTokens.length - 1]) ? function (r) {
           while (root = root.nextSibling) {
             root.nodeType == 1 && (intr[1] ? intr[1] == root.tagName.toLowerCase() : 1) && r.push(root)
           }
@@ -265,19 +265,44 @@
   
       // loop through all descendent tokens
       for (j = 0, l = r.length, k = 0; j < l; j++) {
-        p = r[j]
-        // loop through each token backwards crawling up tree
-        for (i = tokens.length; i--;) {
-          // loop through parent nodes
-          while (p = walker[dividedTokens[i]](p, r[j])) {
-            if (found = interpret.apply(p, q(tokens[i]))) break;
-          }
+        if (_ancestorMatch(r[j], tokens, dividedTokens)) {
+            ret[k++] = r[j];
         }
-        found && (ret[k++] = r[j])
       }
       return ret
     }
   
+    function is(el, selector, root) {
+      if (isNode(selector)) return el == selector
+      
+      if (arrayLike(selector)) return !!~flatten(selector).indexOf(el) // if selector is an array, is el a member?
+      
+      var selectors = selector.split(','), tokens, dividedTokens
+      while (selector = selectors.pop()) {
+        tokens = tokenCache.g(selector) || tokenCache.s(selector, selector.split(tokenizr))
+        dividedTokens = selector.match(dividers)
+        tokens = tokens.slice(0) // copy array
+        if (interpret.apply(el, q(tokens.pop())) && (!tokens.length || _ancestorMatch(el, tokens, dividedTokens, root))) {
+          return true
+        }
+      }      
+    }
+    
+    function _ancestorMatch(el, tokens, dividedTokens, root) {
+      var i, p = el, found;
+      // loop through each token backwards crawling up tree
+      for (i = tokens.length; i--;) {
+        // loop through parent nodes
+        while (p = walker[dividedTokens[i]](p, el)) {
+          if (found = interpret.apply(p, q(tokens[i]))) break;
+        }
+      }
+  
+      if (root && found) found = isAncestor(found, root)
+  
+      return !!found
+    }
+    
     function isNode(el) {
       return (el && el.nodeType && (el.nodeType == 1 || el.nodeType == 9))
     }
@@ -373,6 +398,7 @@
       }
   
     qwery.uniq = uniq
+    qwery.is = is
     qwery.pseudos = {}
   
     qwery.noConflict = function () {
@@ -382,6 +408,7 @@
   
     return qwery
   })
+  
 
   provide("qwery", module.exports);
 
@@ -432,6 +459,15 @@
         }
         return this
       }
+      , is: function(s, r) {
+        var i, l
+        for (i = 0, l = this.length; i < l; i++) {
+          if (q.is(this[i], s, r)) {
+            return true
+          }
+        }
+        return false
+      }
     }, true)
   }(document, ender);
   
@@ -447,9 +483,9 @@
     * https://github.com/ded/bonzo
     * License MIT
     */
-  !function (name, definition){
-    if (typeof define == 'function') define(definition)
-    else if (typeof module != 'undefined') module.exports = definition()
+  !function (name, definition) {
+    if (typeof module != 'undefined') module.exports = definition()
+    else if (typeof define == 'function') define(definition)
     else this[name] = definition()
   }('bonzo', function() {
     var context = this
@@ -460,8 +496,18 @@
       , query = null
       , specialAttributes = /^checked|value|selected$/
       , specialTags = /select|fieldset|table|tbody|tfoot|td|tr|colgroup/i
-      , table = 'table'
-      , tagMap = { thead: table, tbody: table, tfoot: table, tr: 'tbody', th: 'tr', td: 'tr', fieldset: 'form', option: 'select' }
+      , table = [ '<table>', '</table>', 1 ]
+      , td = [ '<table><tbody><tr>', '</tr></tbody></table>', 3 ]
+      , option = [ '<select>', '</select>', 1 ]
+      , tagMap = {
+          thead: table, tbody: table, tfoot: table, colgroup: table, caption: table
+          , tr: [ '<table><tbody>', '</tbody></table>', 2 ]
+          , th: td , td: td
+          , col: [ '<table><colgroup>', '</colgroup></table>', 2 ]
+          , fieldset: [ '<form>', '</form>', 1 ]
+          , legend: [ '<form><fieldset>', '</fieldset></form>', 2 ]
+          , option: option
+          , optgroup: option }
       , stateAttributes = /^checked|selected$/
       , ie = /msie/i.test(navigator.userAgent)
       , uidList = []
@@ -470,16 +516,25 @@
       , px = 'px'
       , setAttribute = 'setAttribute'
       , getAttribute = 'getAttribute'
-      , trimReplace = /(^\s*|\s*$)/g
-      , unitless = { lineHeight: 1, zoom: 1, zIndex: 1, opacity: 1 }
-      , transform = function () {
-          var props = ['webkitTransform', 'MozTransform', 'OTransform', 'msTransform', 'Transform'], i
-          for (i = 0; i < props.length; i++) {
-            if (props[i] in doc.createElement('a').style) {
-              return props[i]
-            }
+      , byTag = 'getElementsByTagName'
+      , features = function() {
+          var e = doc.createElement('div')
+          e.innerHTML = '<a href="#x">x</a><table style="float:left;"></table>'
+          return {
+            hrefExtended: e[byTag]('a')[0][getAttribute]('href') != '#x' //IE<8
+            , autoTbody: e[byTag]('tbody').length !== 0 //IE<8
+            , computedStyle: doc.defaultView && doc.defaultView.getComputedStyle
+            , cssFloat: e[byTag]('table')[0].style.styleFloat ? 'styleFloat' : 'cssFloat'
+            , transform: function () {
+                var props = ['webkitTransform', 'MozTransform', 'OTransform', 'msTransform', 'Transform'], i
+                for (i = 0; i < props.length; i++) {
+                  if (props[i] in e.style) return props[i]
+                }
+              }()
           }
         }()
+      , trimReplace = /(^\s*|\s*$)/g
+      , unitless = { lineHeight: 1, zoom: 1, zIndex: 1, opacity: 1 }
       , trim = String.prototype.trim ?
           function (s) {
             return s.trim()
@@ -504,7 +559,7 @@
     }
   
     function is(node) {
-      return node && node.nodeName && node.nodeType == 1
+      return node && node.nodeName && (node.nodeType == 1 || node.nodeType == 3)
     }
   
     function some(ar, fn, scope, i) {
@@ -514,23 +569,22 @@
       return false
     }
   
-    var getStyle = doc.defaultView && doc.defaultView.getComputedStyle ?
+    function styleProperty(p) {
+        (p == 'transform' && (p = features.transform)) ||
+          (/^transform-?[Oo]rigin$/.test(p) && (p = features.transform + "Origin")) ||
+          (p == 'float' && (p = features.cssFloat))
+        return p ? camelize(p) : null
+    }
+  
+    var getStyle = features.computedStyle ?
       function (el, property) {
-        property = property == 'transform' ? transform : property
-        property = property == 'transform-origin' ? transform + "Origin" : property
         var value = null
-        if (property == 'float') {
-          property = 'cssFloat'
-        }
-        var computed = doc.defaultView.getComputedStyle(el, '')
-        computed && (value = computed[camelize(property)])
+          , computed = doc.defaultView.getComputedStyle(el, '')
+        computed && (value = computed[property])
         return el.style[property] || value
       } : (ie && html.currentStyle) ?
   
       function (el, property) {
-        property = camelize(property)
-        property = property == 'float' ? 'styleFloat' : property
-  
         if (property == 'opacity') {
           var val = 100
           try {
@@ -547,7 +601,7 @@
       } :
   
       function (el, property) {
-        return el.style[camelize(property)]
+        return el.style[property]
       }
   
     function insert(target, host, fn) {
@@ -604,6 +658,17 @@
       el.className = trim(el.className.replace(classReg(c), ' '))
     }
   
+    // this allows method calling for setting values
+    // example:
+  
+    // bonzo(elements).css('color', function (el) {
+    //   return el.getAttribute('data-original-color')
+    // })
+  
+    function set(el, v) {
+      return typeof v == 'function' ? v(el) : v
+    }
+  
     function Bonzo(elements) {
       this.length = 0
       if (elements) {
@@ -648,10 +713,10 @@
   
       , html: function (h, text) {
           var method = text ?
-            html.textContent === null ?
+            html.textContent === undefined ?
               'innerText' :
               'textContent' :
-            'innerHTML', m;
+            'innerHTML';
           function append(el) {
             while (el.firstChild) el.removeChild(el.firstChild)
             each(normalize(h), function (node) {
@@ -660,26 +725,40 @@
           }
           return typeof h !== 'undefined' ?
               this.each(function (el) {
-                (m = el.tagName.match(specialTags)) ?
-                  append(el, m[0]) :
+                !text && el.tagName.match(specialTags) ?
+                  append(el) :
                   (el[method] = h)
               }) :
             this[0] ? this[0][method] : ''
         }
   
       , text: function (text) {
-          return this.html(text, 1)
+          if (typeof text !== 'undefined') {
+            return this.empty().append(document.createTextNode(text))
+          }
+          var ret = ''
+          function collect(ea) {
+            ea.each(function(el) {
+              if (el.nodeType === 3 || el.nodeType === 4) {
+                ret += el.nodeValue
+              } else if (el.nodeType !== 8) {
+                collect(bonzo(el.childNodes))
+              }
+            })
+          }
+          collect(this)
+          return ret
         }
   
       , addClass: function (c) {
           return this.each(function (el) {
-            hasClass(el, c) || addClass(el, c)
+            hasClass(el, set(el, c)) || addClass(el, set(el, c))
           })
         }
   
       , removeClass: function (c) {
           return this.each(function (el) {
-            hasClass(el, c) && removeClass(el, c)
+            hasClass(el, set(el, c)) && removeClass(el, set(el, c))
           })
         }
   
@@ -805,15 +884,15 @@
           // is this a request for just getting a style?
           if (v === undefined && typeof o == 'string') {
             // repurpose 'v'
-            v = this[0];
+            v = this[0]
             if (!v) {
               return null
             }
-            if (v == doc || v == win) {
-              p = (v == doc) ? bonzo.doc() : bonzo.viewport()
+            if (v === doc || v === win) {
+              p = (v === doc) ? bonzo.doc() : bonzo.viewport()
               return o == 'width' ? p.width : o == 'height' ? p.height : ''
             }
-            return getStyle(v, o)
+            return (o = styleProperty(o)) ? getStyle(v, o) : null
           }
           var iter = o
           if (typeof o == 'string') {
@@ -829,21 +908,13 @@
             delete iter.opacity;
           }
   
-          if (v = iter['float']) {
-            // float is a reserved style word. w3 uses cssFloat, ie uses styleFloat
-            ie ? (iter.styleFloat = v) : (iter.cssFloat = v);
-            delete iter['float'];
-          }
-  
           function fn(el, p, v) {
             for (var k in iter) {
               if (iter.hasOwnProperty(k)) {
                 v = iter[k];
                 // change "5" to "5px" - unless you're line-height, which is allowed
-                (p = camelize(k)) && digit.test(v) && !(p in unitless) && (v += px)
-                p = p == 'transform' ? transform : p
-                p = p == 'transformOrigin' ? transform + 'Origin' : p
-                el.style[p] = v
+                (p = styleProperty(k)) && digit.test(v) && !(p in unitless) && (v += px)
+                el.style[p] = set(el, v)
               }
             }
           }
@@ -885,9 +956,10 @@
           return typeof v == 'undefined' ?
             specialAttributes.test(k) ?
               stateAttributes.test(k) && typeof el[k] == 'string' ?
-                true : el[k] : el[getAttribute](k) :
+                true : el[k] : (k == 'href' || k =='src') && features.hrefExtended ?
+                  el[getAttribute](k, 2) : el[getAttribute](k) :
             this.each(function (el) {
-              specialAttributes.test(k) ? (el[k] = v) : el[setAttribute](k, v)
+              specialAttributes.test(k) ? (el[k] = set(el, v)) : el[setAttribute](k, set(el, v))
             })
         }
   
@@ -999,13 +1071,25 @@
     bonzo.create = function (node) {
       return typeof node == 'string' && node !== '' ?
         function () {
-          var tag = /^<([^\s>]+)/.exec(node)
-            , el = doc.createElement(tag && tagMap[tag[1].toLowerCase()] || 'div'), els = []
-          el.innerHTML = node
-          var nodes = el.childNodes
-          el = el.firstChild
-          el.nodeType == 1 && els.push(el)
-          while (el = el.nextSibling) (el.nodeType == 1) && els.push(el)
+          var tag = /^\s*<([^\s>]+)/.exec(node)
+            , el = doc.createElement('div')
+            , els = []
+            , p = tag ? tagMap[tag[1].toLowerCase()] : null
+            , dep = p ? p[2] + 1 : 1
+            , pn = parentNode
+            , tb = features.autoTbody && p && p[0] == '<table>' && !(/<tbody/i).test(node)
+          el.innerHTML = p ? (p[0] + node + p[1]) : node
+          while (dep--) el = el.firstChild
+          do {
+            // tbody special case for IE<8, creates tbody on any empty table
+            // we don't want it if we're just after a <thead>, <caption>, etc.
+            if (el.nodeType == 1 && (!tb || el.tagName.toLowerCase() != 'tbody')) {
+              els.push(el)
+            }
+          } while (el = el.nextSibling)
+          // IE<9 gives us a parentNode which messes up insert() check for cloning
+          // `dep` > 1 can also cause problems with the insert() check (must do this last)
+          each(els, function(el) { el[pn] && el[pn].removeChild(el) })
           return els
   
         }() : is(node) ? [node.cloneNode(true)] : []
@@ -1209,8 +1293,8 @@
     * the entire mootools team: github.com/mootools/mootools-core
     */
   !function (name, definition) {
-    if (typeof define == 'function') define(definition);
-    else if (typeof module != 'undefined') module.exports = definition();
+    if (typeof module != 'undefined') module.exports = definition();
+    else if (typeof define == 'function' && typeof define.amd  == 'object') define(definition);
     else this[name] = definition();
   }('bean', function () {
     var win = window,
@@ -1805,8 +1889,8 @@
     */
   
   !function (name, definition) {
-    if (typeof define == 'function') define(definition)
-    else if (typeof module != 'undefined') module.exports = definition()
+    if (typeof module != 'undefined') module.exports = definition()
+    else if (typeof define == 'function') define(definition)
     else this[name] = this['v'] = definition()
   }('valentine', function () {
   
@@ -1986,12 +2070,6 @@
         return o.toArray(a).length
       }
   
-    , pluck: function (a, k) {
-        return iters.map(a, function (el) {
-          return el[k]
-        })
-      }
-  
     , compact: function (a) {
         return iters.filter(a, function (value) {
           return !!value
@@ -2138,6 +2216,16 @@
           }() && r
       }
   
+    , pluck: function (a, k) {
+        return is.arrLike(a) ?
+          iters.map(a, function (el) {
+            return el[k]
+          }) :
+          o.map(a, function (_, v) {
+            return v[k]
+          })
+      }
+  
     , toArray: function (a) {
         if (!a) return []
   
@@ -2216,18 +2304,23 @@
         }
       }
   
-    , parallel: function () {
+    , parallel: function (fns, callback) {
         var args = o.toArray(arguments)
-          , callback = args.pop()
-          , returns = []
           , len = 0
-        iters.each(args, function (el, i) {
+          , returns = []
+  
+        if (!is.arr(fns)) {
+          callback = args.pop()
+          fns = args
+        }
+  
+        iters.each(fns, function (el, i) {
           el(function () {
             var a = o.toArray(arguments)
               , e = a.shift()
             if (e) return callback(e)
             returns[i] = a
-            if (args.length == ++len) {
+            if (fns.length == ++len) {
               returns.unshift(n)
               callback.apply(n, iters.flatten(returns))
             }

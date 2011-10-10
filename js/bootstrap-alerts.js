@@ -51,9 +51,10 @@
  /* ALERT CLASS DEFINITION
   * ====================== */
 
-  var Alert = function ( content, selector ) {
+  var Alert = function ( content, options ) {
+    this.settings = $.extend({}, $.fn.alert.defaults, options)
     this.$element = $(content)
-      .delegate(selector || '.close', 'click', this.close)
+      .delegate(this.settings.selector, 'click', this.close)
   }
 
   Alert.prototype = {
@@ -65,7 +66,7 @@
       $element.removeClass('in')
 
       function removeElement () {
-        $element.unbind(transitionEnd, removeElement)
+        $.support.transition && $element.unbind(transitionEnd, removeElement)
         $element.remove()
       }
 
@@ -93,13 +94,19 @@
         return $this.data('alert')[options]()
       }
 
-      $(this).data('alert', new Alert( this ))
+      $(this).data('alert', new Alert( this, options ))
 
     })
   }
 
+  $.fn.alert.defaults = {
+    selector: '.close'
+  }
+
   $(document).ready(function () {
-    new Alert($('body'), '.alert-message[data-alert] .close')
+    new Alert($('body'), {
+      selector: '.alert-message[data-alert] .close'
+    })
   })
 
 }( window.jQuery || window.ender );

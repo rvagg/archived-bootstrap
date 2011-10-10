@@ -20,17 +20,6 @@
 
 !function( $ ){
 
-  var d = 'a.menu, .dropdown-toggle'
-
-  function clearMenus() {
-    $(d).closest('li').removeClass('open')
-  }
-
-  $(document).ready(function () {
-    $('html').bind("click", clearMenus)
-    $('body').dropdown( '[data-dropdown] a.menu, [data-dropdown] .dropdown-toggle' )
-  })
-
   /* DROPDOWN PLUGIN DEFINITION
    * ========================== */
 
@@ -49,5 +38,19 @@
       })
     })
   }
+
+  /* APPLY TO STANDARD DROPDOWN ELEMENTS
+   * =================================== */
+
+  var d = 'a.menu, .dropdown-toggle'
+
+  function clearMenus() {
+    $(d).closest('li').removeClass('open')
+  }
+
+  $(document).ready(function () {
+    $('html').bind("click", clearMenus)
+    $('body').dropdown( '[data-dropdown] a.menu, [data-dropdown] .dropdown-toggle' )
+  })
 
 }( window.jQuery || window.ender );

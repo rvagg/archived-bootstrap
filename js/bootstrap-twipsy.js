@@ -90,7 +90,8 @@
 
         actualWidth = $tip[0].offsetWidth
         actualHeight = $tip[0].offsetHeight
-        placement = _.maybeCall(this.options.placement, this.$element[0])
+
+        placement = maybeCall(this.options.placement, this, [ $tip[0], this.$element[0] ])
 
         switch (placement) {
           case 'below':
@@ -127,7 +128,7 @@
       $tip.removeClass('in')
 
       function removeElement () {
-        $tip.unbind(transitionEnd, removeElement)
+        $.support.transition && $tip.unbind(transitionEnd, removeElement)
         $tip.remove()
       }
 
@@ -194,14 +195,9 @@
  /* TWIPSY PRIVATE METHODS
   * ====================== */
 
-   var _ = {
-
-     maybeCall: function ( thing, ctx ) {
-       return (typeof thing == 'function') ? (thing.call(ctx)) : thing
-     }
-
+   function maybeCall ( thing, ctx, args ) {
+     return typeof thing == 'function' ? thing.apply(ctx, args) : thing
    }
-
 
  /* TWIPSY PLUGIN DEFINITION
   * ======================== */

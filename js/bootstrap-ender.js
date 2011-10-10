@@ -77,9 +77,10 @@
  /* ALERT CLASS DEFINITION
   * ====================== */
 
-  var Alert = function ( content, selector ) {
+  var Alert = function ( content, options ) {
+    this.settings = $.extend({}, $.fn.alert.defaults, options)
     this.$element = $(content)
-      .delegate(selector || '.close', 'click', this.close)
+      .delegate(this.settings.selector, 'click', this.close)
   }
 
   Alert.prototype = {
@@ -91,7 +92,7 @@
       $element.removeClass('in')
 
       function removeElement () {
-        $element.unbind(transitionEnd, removeElement)
+        $.support.transition && $element.unbind(transitionEnd, removeElement)
         $element.remove()
       }
 
@@ -119,13 +120,19 @@
         return $this.data('alert')[options]()
       }
 
-      $(this).data('alert', new Alert( this ))
+      $(this).data('alert', new Alert( this, options ))
 
     })
   }
 
+  $.fn.alert.defaults = {
+    selector: '.close'
+  }
+
   $(document).ready(function () {
-    new Alert($('body'), '.alert-message[data-alert] .close')
+    new Alert($('body'), {
+      selector: '.alert-message[data-alert] .close'
+    })
   })
 
 }( window.jQuery || window.ender );
@@ -152,17 +159,6 @@
 
 !function( $ ){
 
-  var d = 'a.menu, .dropdown-toggle'
-
-  function clearMenus() {
-    $(d).closest('li').removeClass('open')
-  }
-
-  $(document).ready(function () {
-    $('html').bind("click", clearMenus)
-    $('body').dropdown( '[data-dropdown] a.menu, [data-dropdown] .dropdown-toggle' )
-  })
-
   /* DROPDOWN PLUGIN DEFINITION
    * ========================== */
 
@@ -181,6 +177,20 @@
       })
     })
   }
+
+  /* APPLY TO STANDARD DROPDOWN ELEMENTS
+   * =================================== */
+
+  var d = 'a.menu, .dropdown-toggle'
+
+  function clearMenus() {
+    $(d).closest('li').removeClass('open')
+  }
+
+  $(document).ready(function () {
+    $('html').bind("click", clearMenus)
+    $('body').dropdown( '[data-dropdown] a.menu, [data-dropdown] .dropdown-toggle' )
+  })
 
 }( window.jQuery || window.ender );
 
@@ -239,15 +249,12 @@
   * ============================= */
 
   var Modal = function ( content, options ) {
-    this.settings = $.extend({}, $.fn.modal.defaults)
+    this.settings = $.extend({}, $.fn.modal.defaults, options)
     this.$element = $(content)
       .delegate('.close', 'click.modal', _bind(this.hide, this))
 
-    if ( options ) {
-      $.extend( this.settings, options )
-      if ( this.settings.show ) {
-        this.show()
-      }
+    if ( this.settings.show ) {
+      this.show()
     }
 
     return this
@@ -266,17 +273,24 @@
 
         escape.call(this)
         backdrop.call(this, function () {
+          var transition = $.support.transition && that.$element.hasClass('fade')
+
           that.$element
             .appendTo(document.body)
             .show()
 
-          if ($.support.transition && that.$element.hasClass('fade')) {
+          if (transition) {
             that.$element[0].offsetWidth // force reflow
           }
 
           that.$element
             .addClass('in')
-            .trigger('shown')
+
+          function te() { that.$element.unbind(transitionEnd, te).trigger('shown') }
+          transition ?
+            that.$element.bind(transitionEnd, te) :
+            that.$element.trigger('shown')
+
         })
 
         return this
@@ -284,6 +298,10 @@
 
     , hide: function (e) {
         e && e.preventDefault()
+
+        if ( !this.isShown ) {
+          return this
+        }
 
         var that = this
         this.isShown = false
@@ -414,7 +432,7 @@
   $.fn.modal.defaults = {
     backdrop: false
   , keyboard: false
-  , show: true
+  , show: false
   }
 
 
@@ -454,27 +472,41 @@
 !function( $ ){
 
   function activate ( element, container ) {
-    container.find('.active').removeClass('active')
+    container
+      .find('.active')
+      .removeClass('active')
+      .find('.dropdown-menu .active')
+      .removeClass('active')
+
     element.addClass('active')
+
+    if ( element.closest('.dropdown-menu') ) {
+      element.closest('li.dropdown').addClass('active')
+    }
   }
 
   function tab( e ) {
     var $this = $(this)
+      , $ul = $this.closest('ul:not(.dropdown-menu)')
       , href = $this[0].getAttribute('href', 2)
-      , $ul = $this.closest('ul')
-      , $controlled
+      , previous
 
-    if (/^#\w+/.test(href)) {
+    if ( /^#\w+/.test(href) ) {
       e.preventDefault()
 
-      if ($this.hasClass('active')) {
+      if ( $this.closest('li').hasClass('active') ) {
         return
       }
 
+      previous = $ul.find('.active a').last()[0]
       $href = $(href)
 
       activate($this.closest('li'), $ul)
-      activate($href, $($href[0].parentNode))
+      $href.length && $href[0].parentNode && activate($href, $($href[0].parentNode))
+
+      $this.trigger(
+        'change'
+       )
     }
   }
 
@@ -586,7 +618,8 @@
 
         actualWidth = $tip[0].offsetWidth
         actualHeight = $tip[0].offsetHeight
-        placement = _.maybeCall(this.options.placement, this.$element[0])
+
+        placement = maybeCall(this.options.placement, this, [ $tip[0], this.$element[0] ])
 
         switch (placement) {
           case 'below':
@@ -623,7 +656,7 @@
       $tip.removeClass('in')
 
       function removeElement () {
-        $tip.unbind(transitionEnd, removeElement)
+        $.support.transition && $tip.unbind(transitionEnd, removeElement)
         $tip.remove()
       }
 
@@ -690,14 +723,9 @@
  /* TWIPSY PRIVATE METHODS
   * ====================== */
 
-   var _ = {
-
-     maybeCall: function ( thing, ctx ) {
-       return (typeof thing == 'function') ? (thing.call(ctx)) : thing
-     }
-
+   function maybeCall ( thing, ctx, args ) {
+     return typeof thing == 'function' ? thing.apply(ctx, args) : thing
    }
-
 
  /* TWIPSY PLUGIN DEFINITION
   * ======================== */
@@ -840,7 +868,7 @@
     setContent: function () {
       var $tip = this.tip()
       $tip.find('.title')[this.options.html ? 'html' : 'text'](this.getTitle())
-      $tip.find('.content p')[this.options.html ? 'html' : 'text'](this.getContent())
+      $tip.find('p')[this.options.html ? 'html' : 'text'](this.getContent())
       $tip[0].className = 'popover'
     }
 
