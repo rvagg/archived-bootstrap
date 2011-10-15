@@ -34,7 +34,6 @@ $(document).ready(function () {
           + '<li><a href="#profile">Profile</a></li>'
           + '</ul>'))
 
-
         $('<ul><li id="home"></li><li id="profile"></li></ul>').appendTo("#qunit-runoff")
 
         $pillsHTML.pills().find('a').last().click()

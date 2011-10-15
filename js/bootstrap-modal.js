@@ -90,7 +90,7 @@
           that.$element
             .addClass('in')
 
-         function te() { that.$element.unbind(transitionEnd, te).trigger('shown') }
+          function te() { that.$element.unbind(transitionEnd, te).trigger('shown') }
 
           transition ?
             that.$element.bind(transitionEnd, te)

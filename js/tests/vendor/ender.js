@@ -1,7 +1,7 @@
 /*!
   * =============================================================
   * Ender: open module JavaScript framework (https://ender.no.de)
-  * Build: ender build /home/rvagg/git/qwery /home/rvagg/git/bonzo/ bean bowser domready valentine
+  * Build: ender build /home/rvagg/git/qwery /home/rvagg/git/bonzo/ bean /home/rvagg/git/bowser domready valentine
   * =============================================================
   */
 
@@ -131,22 +131,27 @@
       , tokenizr = new RegExp(splitters.source + splittersMore.source)
       , chunker = new RegExp(simple.source + '(' + attr.source + ')?' + '(' + pseudo.source + ')?')
       , walker = {
-        ' ': function (node) {
-          return node && node !== html && node.parentNode
+          ' ': function (node) {
+            return node && node !== html && node.parentNode
+          }
+        , '>': function (node, contestant) {
+            return node && node.parentNode == contestant.parentNode && node.parentNode
+          }
+        , '~': function (node) {
+            return node && node.previousSibling
+          }
+        , '+': function (node, contestant, p1, p2) {
+            if (!node) return false
+            p1 = previous(node)
+            p2 = previous(contestant)
+            return p1 && p2 && p1 == p2 && p1
+          }
         }
-      , '>': function (node, contestant) {
-          return node && node.parentNode == contestant.parentNode && node.parentNode
-        }
-      , '~': function (node) {
-          return node && node.previousSibling
-        }
-      , '+': function (node, contestant, p1, p2) {
-          if (!node) return false
-          p1 = previous(node)
-          p2 = previous(contestant)
-          return p1 && p2 && p1 == p2 && p1
-        }
-    }
+      , hrefExtended = function() {
+          var e = doc.createElement('p')
+          return (e.innerHTML = '<a href="#x">x</a>') && e.firstChild.getAttribute('href') != '#x'
+        }()
+  
     function cache() {
       this.c = {}
     }
@@ -177,6 +182,10 @@
     function previous(n) {
       while (n = n.previousSibling) if (n.nodeType == 1) break;
       return n
+    }
+  
+    function getAttr(e, a) {
+      return (a == 'href' || a == 'src') && hrefExtended ? e.getAttribute(a, 2) : e.getAttribute(a)
     }
   
     function q(query) {
@@ -211,7 +220,7 @@
           }
         }
       }
-      if (wholeAttribute && !checkAttr(qualifier, this.getAttribute(attribute) || '', value)) {
+      if (wholeAttribute && !checkAttr(qualifier, getAttr(this, attribute) || '', value)) {
         return false
       }
       return this
@@ -253,7 +262,7 @@
       if (!root) return r
   
       intr = q(token)
-      els = root.nodeType !== 9 && dividedTokens && /^[+~]$/.test(dividedTokens[dividedTokens.length - 1]) ? function (r) {
+      els = dividedTokens && /^[+~]$/.test(dividedTokens[dividedTokens.length - 1]) ? function (r) {
           while (root = root.nextSibling) {
             root.nodeType == 1 && (intr[1] ? intr[1] == root.tagName.toLowerCase() : 1) && r.push(root)
           }
@@ -289,7 +298,7 @@
     }
     
     function _ancestorMatch(el, tokens, dividedTokens, root) {
-      var i, p = el, found;
+      var p = el, found;
       // loop through each token backwards crawling up tree
       for (i = tokens.length; i--;) {
         // loop through parent nodes
@@ -485,10 +494,11 @@
     */
   !function (name, definition) {
     if (typeof module != 'undefined') module.exports = definition()
-    else if (typeof define == 'function') define(definition)
+    else if (typeof define == 'function' && define.amd) define(name, definition)
     else this[name] = definition()
   }('bonzo', function() {
     var context = this
+      , old = context.bonzo
       , win = window
       , doc = win.document
       , html = doc.documentElement
@@ -518,7 +528,7 @@
       , getAttribute = 'getAttribute'
       , byTag = 'getElementsByTagName'
       , features = function() {
-          var e = doc.createElement('div')
+          var e = doc.createElement('p')
           e.innerHTML = '<a href="#x">x</a><table style="float:left;"></table>'
           return {
             hrefExtended: e[byTag]('a')[0][getAttribute]('href') != '#x' //IE<8
@@ -558,14 +568,12 @@
       })
     }
   
-    function is(node) {
-      return node && node.nodeName && (node.nodeType == 1 || node.nodeType == 3)
+    function isNode(node) {
+      return node && node.nodeName && node.nodeType == 1
     }
   
     function some(ar, fn, scope, i) {
-      for (i = 0, j = ar.length; i < j; ++i) {
-        if (fn.call(scope, ar[i], i, ar)) return true
-      }
+      for (i = 0, j = ar.length; i < j; ++i) if (fn.call(scope, ar[i], i, ar)) return true
       return false
     }
   
@@ -582,7 +590,9 @@
           , computed = doc.defaultView.getComputedStyle(el, '')
         computed && (value = computed[property])
         return el.style[property] || value
-      } : (ie && html.currentStyle) ?
+      } :
+  
+      (ie && html.currentStyle) ?
   
       function (el, property) {
         if (property == 'opacity') {
@@ -665,7 +675,7 @@
     //   return el.getAttribute('data-original-color')
     // })
   
-    function set(el, v) {
+    function setter(el, v) {
       return typeof v == 'function' ? v(el) : v
     }
   
@@ -716,7 +726,7 @@
             html.textContent === undefined ?
               'innerText' :
               'textContent' :
-            'innerHTML';
+            'innerHTML', m;
           function append(el) {
             while (el.firstChild) el.removeChild(el.firstChild)
             each(normalize(h), function (node) {
@@ -725,40 +735,26 @@
           }
           return typeof h !== 'undefined' ?
               this.each(function (el) {
-                !text && el.tagName.match(specialTags) ?
-                  append(el) :
+                !text && (m = el.tagName.match(specialTags)) ?
+                  append(el, m[0]) :
                   (el[method] = h)
               }) :
             this[0] ? this[0][method] : ''
         }
   
       , text: function (text) {
-          if (typeof text !== 'undefined') {
-            return this.empty().append(document.createTextNode(text))
-          }
-          var ret = ''
-          function collect(ea) {
-            ea.each(function(el) {
-              if (el.nodeType === 3 || el.nodeType === 4) {
-                ret += el.nodeValue
-              } else if (el.nodeType !== 8) {
-                collect(bonzo(el.childNodes))
-              }
-            })
-          }
-          collect(this)
-          return ret
+          return this.html(text, 1)
         }
   
       , addClass: function (c) {
           return this.each(function (el) {
-            hasClass(el, set(el, c)) || addClass(el, set(el, c))
+            hasClass(el, setter(el, c)) || addClass(el, setter(el, c))
           })
         }
   
       , removeClass: function (c) {
           return this.each(function (el) {
-            hasClass(el, set(el, c)) && removeClass(el, set(el, c))
+            hasClass(el, setter(el, c)) && removeClass(el, setter(el, c))
           })
         }
   
@@ -914,7 +910,7 @@
                 v = iter[k];
                 // change "5" to "5px" - unless you're line-height, which is allowed
                 (p = styleProperty(k)) && digit.test(v) && !(p in unitless) && (v += px)
-                el.style[p] = set(el, v)
+                el.style[p] = setter(el, v)
               }
             }
           }
@@ -959,7 +955,7 @@
                 true : el[k] : (k == 'href' || k =='src') && features.hrefExtended ?
                   el[getAttribute](k, 2) : el[getAttribute](k) :
             this.each(function (el) {
-              specialAttributes.test(k) ? (el[k] = set(el, v)) : el[setAttribute](k, set(el, v))
+              specialAttributes.test(k) ? (el[k] = setter(el, v)) : el[setAttribute](k, setter(el, v))
             })
         }
   
@@ -974,17 +970,17 @@
         }
   
       , data: function (k, v) {
-          var el = this[0]
+          var el = this[0], uid, o
           if (typeof v === 'undefined') {
             el[getAttribute]('data-node-uid') || el[setAttribute]('data-node-uid', ++uuids)
-            var uid = el[getAttribute]('data-node-uid')
+            uid = el[getAttribute]('data-node-uid')
             uidList[uid] || (uidList[uid] = {})
             return uidList[uid][k]
           } else {
             return this.each(function (el) {
               el[getAttribute]('data-node-uid') || el[setAttribute]('data-node-uid', ++uuids)
-              var uid = el[getAttribute]('data-node-uid')
-                , o = uidList[uid] || (uidList[uid] = {})
+              uid = el[getAttribute]('data-node-uid')
+              o = uidList[uid] || (uidList[uid] = {})
               o[k] = v
             })
           }
@@ -1028,7 +1024,7 @@
     }
   
     function normalize(node) {
-      return typeof node == 'string' ? bonzo.create(node) : is(node) ? [node] : node // assume [nodes]
+      return typeof node == 'string' ? bonzo.create(node) : isNode(node) ? [node] : node // assume [nodes]
     }
   
     function scroll(x, y, type) {
@@ -1078,25 +1074,26 @@
             , dep = p ? p[2] + 1 : 1
             , pn = parentNode
             , tb = features.autoTbody && p && p[0] == '<table>' && !(/<tbody/i).test(node)
+  
           el.innerHTML = p ? (p[0] + node + p[1]) : node
           while (dep--) el = el.firstChild
           do {
             // tbody special case for IE<8, creates tbody on any empty table
             // we don't want it if we're just after a <thead>, <caption>, etc.
-            if (el.nodeType == 1 && (!tb || el.tagName.toLowerCase() != 'tbody')) {
+            if ((!tag || el.nodeType == 1) && (!tb || el.tagName.toLowerCase() != 'tbody')) {
               els.push(el)
             }
           } while (el = el.nextSibling)
-          // IE<9 gives us a parentNode which messes up insert() check for cloning
+          // IE < 9 gives us a parentNode which messes up insert() check for cloning
           // `dep` > 1 can also cause problems with the insert() check (must do this last)
           each(els, function(el) { el[pn] && el[pn].removeChild(el) })
           return els
   
-        }() : is(node) ? [node.cloneNode(true)] : []
+        }() : isNode(node) ? [node.cloneNode(true)] : []
     }
   
     bonzo.doc = function () {
-      var vp = this.viewport()
+      var vp = bonzo.viewport()
       return {
           width: Math.max(doc.body.scrollWidth, html.scrollWidth, vp.width)
         , height: Math.max(doc.body.scrollHeight, html.scrollHeight, vp.height)
@@ -1105,9 +1102,7 @@
   
     bonzo.firstChild = function (el) {
       for (var c = el.childNodes, i = 0, j = (c && c.length) || 0, e; i < j; i++) {
-        if (c[i].nodeType === 1) {
-          e = c[j = i]
-        }
+        if (c[i].nodeType === 1) e = c[j = i]
       }
       return e
     }
@@ -1135,7 +1130,6 @@
         return false
       }
   
-    var old = context.bonzo
     bonzo.noConflict = function () {
       context.bonzo = old
       return this
@@ -1719,6 +1713,7 @@
       * IE:      "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C)"
       * Firefox: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0) Gecko/20100101 Firefox/4.0"
       * iPhone:  "Mozilla/5.0 (iPhone Simulator; U; CPU iPhone OS 4_3_2 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8H7 Safari/6533.18.5"
+      * iPad:    "Mozilla/5.0 (iPad; U; CPU OS 4_3_2 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8H7 Safari/6533.18.5", 
       * Android: "Mozilla/5.0 (Linux; U; Android 2.3.4; en-us; T-Mobile G2 Build/GRJ22) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1"
       */
   
@@ -1728,6 +1723,7 @@
       , chrome = /chrome/i.test(ua)
       , safari = /safari/i.test(ua) && !chrome
       , iphone = /iphone/i.test(ua)
+      , ipad = /ipad/i.test(ua)
       , android = /android/i.test(ua)
       , opera = /opera/i.test(ua)
       , firefox = /firefox/i.test(ua)
@@ -1749,6 +1745,14 @@
           webkit: t
         , iphone: t
         , mobile: t
+        , ios: t
+        , version: ua.match(webkitVersion)[1]
+      }
+      if (ipad) return {
+          webkit: t
+        , ipad: t
+        , mobile: t
+        , ios: t
         , version: ua.match(webkitVersion)[1]
       }
       if (android) return {
@@ -1769,6 +1773,7 @@
       if (gecko) {
         var o = {
             gecko: t
+          , mozilla: t
           , version: ua.match(/firefox\/(\d+(\.\d+)?)/i)[1]
         }
         if (firefox) o.firefox = t
@@ -1782,18 +1787,18 @@
     // Graded Browser Support
     // http://developer.yahoo.com/yui/articles/gbs
     if ((bowser.msie && bowser.version >= 6) ||
-        (bowser.chrome && bowser.version >= 8) ||
-        (bowser.firefox && bowser.version >= 3.6) ||
+        (bowser.chrome && bowser.version >= 10) ||
+        (bowser.firefox && bowser.version >= 4.0) ||
         (bowser.safari && bowser.version >= 5) ||
-        (bowser.opera && bowser.version >= 9.5)) {
+        (bowser.opera && bowser.version >= 10.0)) {
       bowser.a = t;
     }
   
     else if ((bowser.msie && bowser.version < 6) ||
-        (bowser.chrome && bowser.version < 8) ||
-        (bowser.firefox && bowser.version < 3.6) ||
+        (bowser.chrome && bowser.version < 10) ||
+        (bowser.firefox && bowser.version < 4.0) ||
         (bowser.safari && bowser.version < 5) ||
-        (bowser.opera && bowser.version < 9.5)) {
+        (bowser.opera && bowser.version < 10.0)) {
       bowser.c = t
     } else bowser.x = t
   

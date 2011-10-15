@@ -92,7 +92,7 @@
       $element.removeClass('in')
 
       function removeElement () {
-        $.support.transition && $element.unbind(transitionEnd, removeElement)
+        $.support.transition && $element.hasClass('fade') && $element.unbind(transitionEnd, removeElement)
         $element.remove()
       }
 
@@ -287,9 +287,10 @@
             .addClass('in')
 
           function te() { that.$element.unbind(transitionEnd, te).trigger('shown') }
+
           transition ?
-            that.$element.bind(transitionEnd, te) :
-            that.$element.trigger('shown')
+            that.$element.bind(transitionEnd, te)
+            : that.$element.trigger('shown')
 
         })
 
@@ -313,8 +314,8 @@
           .removeClass('in')
 
         function removeElement () {
+          $.support.transition && that.$element.unbind(transitionEnd, removeElement)
           that.$element
-            .unbind(transitionEnd, removeElement)
             .hide()
             .trigger('hidden')
 
@@ -353,14 +354,14 @@
 
       this.$backdrop.addClass('in')
 
-      var cb = function() {
+      function cb() {
         that.$backdrop.unbind(transitionEnd, cb)
         callback()
       }
 
       doAnimate ?
-        this.$backdrop.bind(transitionEnd, cb) :
-        callback()
+        this.$backdrop.bind(transitionEnd, cb)
+        : callback()
 
     } else if ( !this.isShown && this.$backdrop ) {
       this.$backdrop.removeClass('in')
@@ -480,7 +481,7 @@
 
     element.addClass('active')
 
-    if ( element.closest('.dropdown-menu') ) {
+    if ( element.parent('.dropdown-menu') ) {
       element.closest('li.dropdown').addClass('active')
     }
   }
@@ -488,7 +489,7 @@
   function tab( e ) {
     var $this = $(this)
       , $ul = $this.closest('ul:not(.dropdown-menu)')
-      , href = $this[0].getAttribute('href', 2)
+      , href = $this.attr('href')
       , previous
 
     if ( /^#\w+/.test(href) ) {
@@ -504,9 +505,7 @@
       activate($this.closest('li'), $ul)
       $href.length && $href[0].parentNode && activate($href, $($href[0].parentNode))
 
-      $this.trigger(
-        'change'
-       )
+      $this.trigger('change')
     }
   }
 
@@ -868,7 +867,7 @@
     setContent: function () {
       var $tip = this.tip()
       $tip.find('.title')[this.options.html ? 'html' : 'text'](this.getTitle())
-      $tip.find('p')[this.options.html ? 'html' : 'text'](this.getContent())
+      $tip.find('.content p')[this.options.html ? 'html' : 'text'](this.getContent())
       $tip[0].className = 'popover'
     }
 

@@ -29,7 +29,7 @@
 
     element.addClass('active')
 
-    if ( element.closest('.dropdown-menu') ) {
+    if ( element.parent('.dropdown-menu') ) {
       element.closest('li.dropdown').addClass('active')
     }
   }
@@ -37,7 +37,7 @@
   function tab( e ) {
     var $this = $(this)
       , $ul = $this.closest('ul:not(.dropdown-menu)')
-      , href = $this[0].getAttribute('href', 2)
+      , href = $this.attr('href')
       , previous
 
     if ( /^#\w+/.test(href) ) {
