@@ -55,7 +55,7 @@
   var Modal = function ( content, options ) {
     this.settings = $.extend({}, $.fn.modal.defaults, options)
     this.$element = $(content)
-      .delegate('.close', 'click.modal', _bind(this.hide, this))
+      .delegate('.close', 'click.modal', $.proxy(this.hide, this))
 
     if ( this.settings.show ) {
       this.show()
@@ -90,11 +90,9 @@
           that.$element
             .addClass('in')
 
-          function te() { that.$element.unbind(transitionEnd, te).trigger('shown') }
-
           transition ?
-            that.$element.bind(transitionEnd, te)
-            : that.$element.trigger('shown')
+            that.$element.one(transitionEnd, function () { that.$element.trigger('shown') }) :
+            that.$element.trigger('shown')
 
         })
 
@@ -118,7 +116,6 @@
           .removeClass('in')
 
         function removeElement () {
-          $.support.transition && that.$element.unbind(transitionEnd, removeElement)
           that.$element
             .hide()
             .trigger('hidden')
@@ -127,7 +124,7 @@
         }
 
         $.support.transition && this.$element.hasClass('fade') ?
-          this.$element.bind(transitionEnd, removeElement) :
+          this.$element.one(transitionEnd, removeElement) :
           removeElement()
 
         return this
@@ -149,7 +146,7 @@
         .appendTo(document.body)
 
       if ( this.settings.backdrop != 'static' ) {
-        this.$backdrop.click(_bind(this.hide, this))
+        this.$backdrop.click($.proxy(this.hide, this))
       }
 
       if ( doAnimate ) {
@@ -158,32 +155,24 @@
 
       this.$backdrop.addClass('in')
 
-      function cb() {
-        that.$backdrop.unbind(transitionEnd, cb)
-        callback()
-      }
-
       doAnimate ?
-        this.$backdrop.bind(transitionEnd, cb)
-        : callback()
+        this.$backdrop.one(transitionEnd, callback) :
+        callback()
 
     } else if ( !this.isShown && this.$backdrop ) {
       this.$backdrop.removeClass('in')
 
       function removeElement() {
-        that.$backdrop
-          .unbind(transitionEnd, removeElement)
-          .remove()
+        that.$backdrop.remove()
         that.$backdrop = null
       }
 
       $.support.transition && this.$element.hasClass('fade')?
-        this.$backdrop.bind(transitionEnd, removeElement) :
+        this.$backdrop.one(transitionEnd, removeElement) :
         removeElement()
     } else if ( callback ) {
        callback()
     }
-
   }
 
   function escape() {
@@ -248,7 +237,7 @@
     $('body').delegate('[data-controls-modal]', 'click', function (e) {
       e.preventDefault()
       var $this = $(this).data('show', true)
-      $('#' + $this.attr('data-controls-modal')).modal( _data($this[0]) )
+      $('#' + $this.attr('data-controls-modal')).modal( $this.data() )
     })
   })
 

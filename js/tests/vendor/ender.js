@@ -1,7 +1,7 @@
 /*!
   * =============================================================
   * Ender: open module JavaScript framework (https://ender.no.de)
-  * Build: ender build /home/rvagg/git/qwery /home/rvagg/git/bonzo/ bean /home/rvagg/git/bowser domready valentine
+  * Build: ender build /home/rvagg/git/qwery /home/rvagg/git/bonzo/ /home/rvagg/git/bean /home/rvagg/git/bowser domready valentine
   * =============================================================
   */
 
@@ -298,7 +298,7 @@
     }
     
     function _ancestorMatch(el, tokens, dividedTokens, root) {
-      var p = el, found;
+      var p = el, i, found;
       // loop through each token backwards crawling up tree
       for (i = tokens.length; i--;) {
         // loop through parent nodes
@@ -1386,6 +1386,7 @@
       if (!events || !events[type]) {
         return element;
       }
+      handler && handler.__one && (handler = handler.__one)
       names = orgType.replace(namespace, '');
       uids = names ? names.split('.') : [handler.__uid];
   
@@ -1421,19 +1422,34 @@
       };
     },
   
-    add = function (element, events, fn, delfn, $) {
+    _add = function (meth, element, events, fn, delfn, $) {
       if (typeof events == 'object' && !fn) {
         for (var type in events) {
-          events.hasOwnProperty(type) && add(element, type, events[type]);
+          events.hasOwnProperty(type) && _add(meth, element, type, events[type]);
         }
       } else {
         var isDel = typeof fn == 'string', types = (isDel ? fn : events).split(' ');
-        fn = isDel ? del(events, delfn, $) : fn;
+        fn = isDel ? del(events, delfn, $) : meth == 'one' ? 
+          function(fn) {
+            var one = function() {
+              remove(element, events, one)
+              fn.apply(this, arguments)
+            }
+            return (fn.__one = one)
+          }(fn) : fn
         for (var i = types.length; i--;) {
-          addListener(element, types[i], fn, Array.prototype.slice.call(arguments, isDel ? 4 : 3));
+          addListener(element, types[i], fn, Array.prototype.slice.call(arguments, isDel ? 5 : 4));
         }
       }
       return element;
+    },
+  
+    add = function () {
+      return _add.apply(this, ['add'].concat(Array.prototype.slice.call(arguments, 0)))
+    },
+  
+    one = function () {
+      return _add.apply(this, ['one'].concat(Array.prototype.slice.call(arguments, 0)))
     },
   
     remove = function (element, orgEvents, fn) {
@@ -1600,7 +1616,7 @@
       mousewheel: { base: /Firefox/.test(navigator.userAgent) ? 'DOMMouseScroll' : 'mousewheel' }
     };
   
-    var bean = { add: add, remove: remove, clone: clone, fire: fire };
+    var bean = { add: add, one: one, remove: remove, clone: clone, fire: fire };
   
     var clean = function (el) {
       var uid = remove(el).__uid;
@@ -1626,6 +1642,7 @@
   
     return bean;
   });
+  
 
   provide("bean", module.exports);
 
@@ -1655,6 +1672,8 @@
       bind: add,
       listen: add,
       delegate: add,
+  
+      one: integrate('one'),
   
       unbind: remove,
       unlisten: remove,
@@ -1688,6 +1707,7 @@
   
     $.ender(methods, true);
   }(ender);
+  
 
 }();
 

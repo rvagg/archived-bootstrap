@@ -2,27 +2,89 @@
 // TWITTER BOOTSTRAP FOR ENDER                                  //
 
 !(function() {
-  !$.support && ($.support = {})
+	!function() {
+		var removeOrig = ender.fn.remove 
+			, delegateOrig = ender.fn.delegate
+			, dataOrig = ender.fn.data
+			, triggerOrig = ender.fn.trigger
+			, findOrig = ender.fn.find
+			, enderOrig = ender
 
-  function _bind(fn, ctx) { return function() { fn.apply(ctx, arguments) } }
+		// and now for something completely different...
+		// support jQuery style $(function() {}) shorthand for $(document).ready(function() {})
+		// but this means making a proxy for ender(), which isn't trivial
+		ender = function() {
+			return (arguments.length && typeof arguments[0] == 'function' ?
+				enderOrig.domReady : enderOrig).apply(this, arguments)
+		}
+		for (p in enderOrig) ender[p] = enderOrig[p]
 
-  function _camelize(s) {
-    return s.replace(/-(.)/g, function (m, m1) { return m1.toUpperCase() })
-  }
-  
-  function _dataValue(d) {
-    try {
-      return d = d === "true" ? true : d === "false" ? false : d === "null" ? null : !isNaN(d) ? parseFloat(d) : d;
-    } catch(e) {}
-    return d
-  }
-  
-  function _data(e) {
-    var d = {}
-    $.each(e.attributes, function(a) { /^data-/.test(a.name) && (d[_camelize((""+a.name).substring(5))] = _dataValue(a.value)) })
-    return d
-  }
+		// link Bonzo and Bean so bonzo.remove() triggers a bean.remove()
+		ender.fn.remove = function() {
+			this.unbind()
+			return removeOrig.apply(this, arguments)
+		}
+		// fill in for the missing bonzo.parent() with bonzo.closest()
+		ender.fn.parent = function() {
+			if (arguments.length) return this.closest.apply(this, arguments)
+			var r = []
+			$.each(this, function(e) { e && e.parentNode && r.push(e.parentNode) })
+			return $(r)
+		}
+		// handle a 'return false' from event listeners like jQuery
+		// i.e. stop propagation and prevent default
+		ender.fn.delegate = function() {
+			if (arguments.length > 2 && typeof arguments[2] == 'function') {
+				var fn = arguments[2]
+				arguments[2] = function(e) {
+					var r = fn.apply(this, arguments)
+					if (r === false) {
+						e.preventDefault()
+						e.stopPropagation()
+					}
+					return r
+				}
+			}
+			return delegateOrig.apply(this, arguments)
+		}
+		// provide a $().map() for elements like jQuery
+		ender.fn.map = function(fn) { return ender.map(this, function(e) { return fn.call(e) }) }
+		function camelize(s) {
+			return s.replace(/-(.)/g, function (m, m1) { return m1.toUpperCase() })
+		}
+		function dataValue(d) {
+			try {
+				return d = d === "true" ? true : d === "false" ? false : d === "null" ? null : !isNaN(d) ? parseFloat(d) : d;
+			} catch(e) {}
+			return d
+		}
+		function data() {
+			var d = {}
+			$.each(this[0].attributes, function(a) { /^data-/.test(a.name) && (d[camelize((""+a.name).substring(5))] = dataValue(a.value)) })
+			return d
+		}
+		// provide a $().data() to dump all data contents, Bonzo only gives us $().data(key)
+		ender.fn.data = function() {
+			return (arguments.length ? dataOrig : data).apply(this, arguments)
+		}
+		// provider a $().trigger() that takes an object as an argument
+		ender.fn.trigger = function(t) {
+			var args = arguments
+			if (typeof t != 'string' && t.type) args = [t.type, t]
+			return triggerOrig.apply(this, args)
+		}
+		// remove prefixed '>' from selector sent to find(), qwery can't handle it
+		ender.fn.find = function(s) {
+			return findOrig.call(this, s = /^>/.test(s) ? s.substring(1) : s)
+		}
+		// provide $.data(e, k, v) like jQuery
+		ender.data = function(e, k, v) { return ender.fn.data.call($(e), k, v) }
+		ender.proxy = function(fn, ctx) {
+			return function() { return fn.apply(ctx, arguments) }
+		}
 
+		!ender.support && (ender.support = {})
+	}()
 
 /* ==========================================================
  * bootstrap-alerts.js v1.3.0
@@ -86,13 +148,12 @@
   Alert.prototype = {
 
     close: function (e) {
-      var $element = $(this).closest('.alert-message')
+      var $element = $(this).parent('.alert-message')
 
       e && e.preventDefault()
       $element.removeClass('in')
 
       function removeElement () {
-        $.support.transition && $element.hasClass('fade') && $element.unbind(transitionEnd, removeElement)
         $element.remove()
       }
 
@@ -136,7 +197,6 @@
   })
 
 }( window.jQuery || window.ender );
-
 /* ============================================================
  * bootstrap-dropdown.js v1.3.0
  * http://twitter.github.com/bootstrap/javascript.html#dropdown
@@ -165,14 +225,11 @@
   $.fn.dropdown = function ( selector ) {
     return this.each(function () {
       $(this).delegate(selector || d, 'click', function (e) {
-        var li = $(this).closest('li')
+        var li = $(this).parent('li')
           , isActive = li.hasClass('open')
 
         clearMenus()
         !isActive && li.toggleClass('open')
-
-        e.preventDefault()
-        e.stopPropagation()
         return false
       })
     })
@@ -184,10 +241,10 @@
   var d = 'a.menu, .dropdown-toggle'
 
   function clearMenus() {
-    $(d).closest('li').removeClass('open')
+    $(d).parent('li').removeClass('open')
   }
 
-  $(document).ready(function () {
+  $(function () {
     $('html').bind("click", clearMenus)
     $('body').dropdown( '[data-dropdown] a.menu, [data-dropdown] .dropdown-toggle' )
   })
@@ -251,7 +308,7 @@
   var Modal = function ( content, options ) {
     this.settings = $.extend({}, $.fn.modal.defaults, options)
     this.$element = $(content)
-      .delegate('.close', 'click.modal', _bind(this.hide, this))
+      .delegate('.close', 'click.modal', $.proxy(this.hide, this))
 
     if ( this.settings.show ) {
       this.show()
@@ -286,11 +343,9 @@
           that.$element
             .addClass('in')
 
-          function te() { that.$element.unbind(transitionEnd, te).trigger('shown') }
-
           transition ?
-            that.$element.bind(transitionEnd, te)
-            : that.$element.trigger('shown')
+            that.$element.one(transitionEnd, function () { that.$element.trigger('shown') }) :
+            that.$element.trigger('shown')
 
         })
 
@@ -314,7 +369,6 @@
           .removeClass('in')
 
         function removeElement () {
-          $.support.transition && that.$element.unbind(transitionEnd, removeElement)
           that.$element
             .hide()
             .trigger('hidden')
@@ -323,7 +377,7 @@
         }
 
         $.support.transition && this.$element.hasClass('fade') ?
-          this.$element.bind(transitionEnd, removeElement) :
+          this.$element.one(transitionEnd, removeElement) :
           removeElement()
 
         return this
@@ -345,7 +399,7 @@
         .appendTo(document.body)
 
       if ( this.settings.backdrop != 'static' ) {
-        this.$backdrop.click(_bind(this.hide, this))
+        this.$backdrop.click($.proxy(this.hide, this))
       }
 
       if ( doAnimate ) {
@@ -354,32 +408,24 @@
 
       this.$backdrop.addClass('in')
 
-      function cb() {
-        that.$backdrop.unbind(transitionEnd, cb)
-        callback()
-      }
-
       doAnimate ?
-        this.$backdrop.bind(transitionEnd, cb)
-        : callback()
+        this.$backdrop.one(transitionEnd, callback) :
+        callback()
 
     } else if ( !this.isShown && this.$backdrop ) {
       this.$backdrop.removeClass('in')
 
       function removeElement() {
-        that.$backdrop
-          .unbind(transitionEnd, removeElement)
-          .remove()
+        that.$backdrop.remove()
         that.$backdrop = null
       }
 
       $.support.transition && this.$element.hasClass('fade')?
-        this.$backdrop.bind(transitionEnd, removeElement) :
+        this.$backdrop.one(transitionEnd, removeElement) :
         removeElement()
     } else if ( callback ) {
        callback()
     }
-
   }
 
   function escape() {
@@ -444,7 +490,7 @@
     $('body').delegate('[data-controls-modal]', 'click', function (e) {
       e.preventDefault()
       var $this = $(this).data('show', true)
-      $('#' + $this.attr('data-controls-modal')).modal( _data($this[0]) )
+      $('#' + $this.attr('data-controls-modal')).modal( $this.data() )
     })
   })
 
@@ -474,9 +520,9 @@
 
   function activate ( element, container ) {
     container
-      .find('.active')
+      .find('> .active')
       .removeClass('active')
-      .find('.dropdown-menu .active')
+      .find('> .dropdown-menu > .active')
       .removeClass('active')
 
     element.addClass('active')
@@ -495,17 +541,20 @@
     if ( /^#\w+/.test(href) ) {
       e.preventDefault()
 
-      if ( $this.closest('li').hasClass('active') ) {
+      if ( $this.parent('li').hasClass('active') ) {
         return
       }
 
       previous = $ul.find('.active a').last()[0]
       $href = $(href)
 
-      activate($this.closest('li'), $ul)
-      $href.length && $href[0].parentNode && activate($href, $($href[0].parentNode))
+      activate($this.parent('li'), $ul)
+      activate($href, $href.parent())
 
-      $this.trigger('change')
+      $this.trigger({
+        type: 'change'
+      , relatedTarget: previous
+      })
     }
   }
 
@@ -515,7 +564,7 @@
 
   $.fn.tabs = $.fn.pills = function ( selector ) {
     return this.each(function () {
-      $(selector || '.tabs li > a, .pills > li > a', this).delegate('click',  tab)
+      $(this).delegate(selector || '.tabs li > a, .pills > li > a', 'click', tab)
     })
   }
 
@@ -655,7 +704,6 @@
       $tip.removeClass('in')
 
       function removeElement () {
-        $.support.transition && $tip.unbind(transitionEnd, removeElement)
         $tip.remove()
       }
 
@@ -753,11 +801,11 @@
     options = $.extend({}, $.fn[name].defaults, options)
 
     function get(ele) {
-      var twipsy = $(ele).data(name)
+      var twipsy = $.data(ele, name)
 
       if (!twipsy) {
         twipsy = new Constructor(ele, $.fn.twipsy.elementOptions(ele, options))
-        $(ele).data(name, twipsy)
+        $.data(ele, name, twipsy)
       }
 
       return twipsy
@@ -829,7 +877,6 @@
   }
 
 }( window.jQuery || window.ender );
-
 /* ===========================================================
  * bootstrap-popover.js v1.3.0
  * http://twitter.github.com/bootstrap/javascript.html#popover
@@ -907,7 +954,6 @@
   $.fn.popover.defaults = $.extend({} , $.fn.twipsy.defaults, { content: 'data-content', placement: 'right'})
 
 }( window.jQuery || window.ender );
-
 /* =============================================================
  * bootstrap-scrollspy.js v1.3.0
  * http://twitter.github.com/bootstrap/javascript.html#scrollspy
@@ -933,7 +979,7 @@
   var $window = $(window)
 
   function ScrollSpy( topbar, selector ) {
-    var processScroll = _bind(this.processScroll, this)
+    var processScroll = $.proxy(this.processScroll, this)
     this.$topbar = $(topbar)
     this.selector = selector || 'li > a'
     this.refresh()
@@ -945,8 +991,8 @@
   ScrollSpy.prototype = {
 
       refresh: function () {
-        this.targets = this.$topbar.find(this.selector).map(function (e) {
-          var href = e.getAttribute('href', 2)
+        this.targets = this.$topbar.find(this.selector).map(function () {
+          var href = $(this).attr('href')
           return /^#\w/.test(href) && $(href).length ? href : null
         })
 
@@ -974,12 +1020,12 @@
         this.activeTarget = target
 
         this.$topbar
-          .find(this.selector).closest('.active')
+          .find(this.selector).parent('.active')
           .removeClass('active')
 
         this.$topbar
           .find(this.selector + '[href="' + target + '"]')
-          .closest('li')
+          .parent('li')
           .addClass('active')
       }
 
@@ -1014,9 +1060,8 @@
 
 }( window.jQuery || window.ender );
 
-
 ender.ender({
-	alert: ender.fn. alert,
+	alert: ender.fn.alert,
 	dropdown: ender.fn.dropdown,
 	modal: ender.fn.modal,
 	tabs: ender.fn.tabs,

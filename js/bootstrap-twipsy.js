@@ -128,7 +128,6 @@
       $tip.removeClass('in')
 
       function removeElement () {
-        $.support.transition && $tip.unbind(transitionEnd, removeElement)
         $tip.remove()
       }
 
@@ -226,11 +225,11 @@
     options = $.extend({}, $.fn[name].defaults, options)
 
     function get(ele) {
-      var twipsy = $(ele).data(name)
+      var twipsy = $.data(ele, name)
 
       if (!twipsy) {
         twipsy = new Constructor(ele, $.fn.twipsy.elementOptions(ele, options))
-        $(ele).data(name, twipsy)
+        $.data(ele, name, twipsy)
       }
 
       return twipsy

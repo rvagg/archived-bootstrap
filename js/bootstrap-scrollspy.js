@@ -23,7 +23,7 @@
   var $window = $(window)
 
   function ScrollSpy( topbar, selector ) {
-    var processScroll = _bind(this.processScroll, this)
+    var processScroll = $.proxy(this.processScroll, this)
     this.$topbar = $(topbar)
     this.selector = selector || 'li > a'
     this.refresh()
@@ -35,8 +35,8 @@
   ScrollSpy.prototype = {
 
       refresh: function () {
-        this.targets = this.$topbar.find(this.selector).map(function (e) {
-          var href = e.getAttribute('href', 2)
+        this.targets = this.$topbar.find(this.selector).map(function () {
+          var href = $(this).attr('href')
           return /^#\w/.test(href) && $(href).length ? href : null
         })
 
@@ -64,12 +64,12 @@
         this.activeTarget = target
 
         this.$topbar
-          .find(this.selector).closest('.active')
+          .find(this.selector).parent('.active')
           .removeClass('active')
 
         this.$topbar
           .find(this.selector + '[href="' + target + '"]')
-          .closest('li')
+          .parent('li')
           .addClass('active')
       }
 

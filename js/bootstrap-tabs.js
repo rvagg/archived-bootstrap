@@ -22,9 +22,9 @@
 
   function activate ( element, container ) {
     container
-      .find('.active')
+      .find('> .active')
       .removeClass('active')
-      .find('.dropdown-menu .active')
+      .find('> .dropdown-menu > .active')
       .removeClass('active')
 
     element.addClass('active')
@@ -43,17 +43,20 @@
     if ( /^#\w+/.test(href) ) {
       e.preventDefault()
 
-      if ( $this.closest('li').hasClass('active') ) {
+      if ( $this.parent('li').hasClass('active') ) {
         return
       }
 
       previous = $ul.find('.active a').last()[0]
       $href = $(href)
 
-      activate($this.closest('li'), $ul)
-      $href.length && $href[0].parentNode && activate($href, $($href[0].parentNode))
+      activate($this.parent('li'), $ul)
+      activate($href, $href.parent())
 
-      $this.trigger('change')
+      $this.trigger({
+        type: 'change'
+      , relatedTarget: previous
+      })
     }
   }
 
@@ -63,7 +66,7 @@
 
   $.fn.tabs = $.fn.pills = function ( selector ) {
     return this.each(function () {
-      $(selector || '.tabs li > a, .pills > li > a', this).delegate('click',  tab)
+      $(this).delegate(selector || '.tabs li > a, .pills > li > a', 'click', tab)
     })
   }
 

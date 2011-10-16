@@ -26,14 +26,11 @@
   $.fn.dropdown = function ( selector ) {
     return this.each(function () {
       $(this).delegate(selector || d, 'click', function (e) {
-        var li = $(this).closest('li')
+        var li = $(this).parent('li')
           , isActive = li.hasClass('open')
 
         clearMenus()
         !isActive && li.toggleClass('open')
-
-        e.preventDefault()
-        e.stopPropagation()
         return false
       })
     })
@@ -45,10 +42,10 @@
   var d = 'a.menu, .dropdown-toggle'
 
   function clearMenus() {
-    $(d).closest('li').removeClass('open')
+    $(d).parent('li').removeClass('open')
   }
 
-  $(document).ready(function () {
+  $(function () {
     $('html').bind("click", clearMenus)
     $('body').dropdown( '[data-dropdown] a.menu, [data-dropdown] .dropdown-toggle' )
   })
