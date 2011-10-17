@@ -1,7 +1,7 @@
 /*!
   * =============================================================
   * Ender: open module JavaScript framework (https://ender.no.de)
-  * Build: ender build /home/rvagg/git/qwery /home/rvagg/git/bonzo/ /home/rvagg/git/bean /home/rvagg/git/bowser domready valentine
+  * Build: ender build /home/rvagg/git/qwery /home/rvagg/git/bonzo/ /home/rvagg/git/bean bowser domready valentine
   * =============================================================
   */
 
@@ -262,7 +262,7 @@
       if (!root) return r
   
       intr = q(token)
-      els = dividedTokens && /^[+~]$/.test(dividedTokens[dividedTokens.length - 1]) ? function (r) {
+      els = root.nodeType !== 9 && dividedTokens && /^[+~]$/.test(dividedTokens[dividedTokens.length - 1]) ? function (r) {
           while (root = root.nextSibling) {
             root.nodeType == 1 && (intr[1] ? intr[1] == root.tagName.toLowerCase() : 1) && r.push(root)
           }
@@ -298,7 +298,7 @@
     }
     
     function _ancestorMatch(el, tokens, dividedTokens, root) {
-      var p = el, i, found;
+      var i, p = el, found;
       // loop through each token backwards crawling up tree
       for (i = tokens.length; i--;) {
         // loop through parent nodes
@@ -531,8 +531,8 @@
           var e = doc.createElement('p')
           e.innerHTML = '<a href="#x">x</a><table style="float:left;"></table>'
           return {
-            hrefExtended: e[byTag]('a')[0][getAttribute]('href') != '#x' //IE<8
-            , autoTbody: e[byTag]('tbody').length !== 0 //IE<8
+            hrefExtended: e[byTag]('a')[0][getAttribute]('href') != '#x' // IE < 8
+            , autoTbody: e[byTag]('tbody').length !== 0 // IE < 8
             , computedStyle: doc.defaultView && doc.defaultView.getComputedStyle
             , cssFloat: e[byTag]('table')[0].style.styleFloat ? 'styleFloat' : 'cssFloat'
             , transform: function () {
@@ -614,14 +614,21 @@
         return el.style[property]
       }
   
+    // this insert method is intense
     function insert(target, host, fn) {
       var i = 0, self = host || this, r = []
+        // target nodes could be a css selector if it's a string and a selector engine is present
+        // otherwise, just use target
         , nodes = query && typeof target == 'string' && target.charAt(0) != '<' ? query(target) : target
+      // normalize each node in case it's still a string and we need to create nodes on the fly
       each(normalize(nodes), function (t) {
         each(self, function (el) {
           var n = !el[parentNode] || (el[parentNode] && !el[parentNode][parentNode]) ?
             function () {
               var c = el.cloneNode(true)
+              // check for existence of an event cloner
+              // preferably https://github.com/fat/bean
+              // otherwise Bonzo won't do this for you
               self.$ && self.cloneEvents && self.$(c).cloneEvents(el)
               return c
             }() : el
@@ -714,11 +721,11 @@
         }
   
       , first: function () {
-          return bonzo(this[0])
+          return bonzo(this.length ? this[0] : [])
         }
   
       , last: function () {
-          return bonzo(this[this.length - 1])
+          return bonzo(this.length ? this[this.length - 1] : [])
         }
   
       , html: function (h, text) {
@@ -778,7 +785,7 @@
           })
         }
   
-      , hide: function (elements) {
+      , hide: function () {
           return this.each(function (el) {
             el.style.display = 'none'
           })
@@ -937,6 +944,33 @@
               top: top
             , left: left
             , height: height
+            , width: width
+          }
+        }
+  
+      , dim: function () {
+          var el = this[0]
+            , orig = !el.offsetWidth && !el.offsetHeight ?
+               // el isn't visible, can't be measured properly, so fix that
+               function (t, s) {
+                  s = {
+                      position: el.style.position || ''
+                    , visibility: el.style.visibility || ''
+                    , display: el.style.display || ''
+                  }
+                  t.first().css({
+                      position: 'absolute'
+                    , visibility: 'hidden'
+                    , display: 'block'
+                  })
+                  return s
+                }(this) : null
+            , width = el.offsetWidth
+            , height = el.offsetHeight
+  
+          orig && this.first().css(orig)
+          return {
+              height: height
             , width: width
           }
         }
@@ -1198,11 +1232,11 @@
       },
   
       first: function () {
-        return $(this[0])
+        return this.length ? $(this[0]) : this
       },
   
       last: function () {
-        return $(this[this.length - 1])
+        return this.length ? $(this[this.length - 1]) : this
       },
   
       next: function () {
@@ -1793,7 +1827,6 @@
       if (gecko) {
         var o = {
             gecko: t
-          , mozilla: t
           , version: ua.match(/firefox\/(\d+(\.\d+)?)/i)[1]
         }
         if (firefox) o.firefox = t

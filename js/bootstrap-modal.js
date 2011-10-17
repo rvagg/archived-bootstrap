@@ -81,7 +81,7 @@
 
           that.$element
             .appendTo(document.body)
-            .show()
+            .show('block')
 
           if (transition) {
             that.$element[0].offsetWidth // force reflow

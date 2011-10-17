@@ -5,7 +5,7 @@
 	!function() {
 		var removeOrig = ender.fn.remove 
 			, delegateOrig = ender.fn.delegate
-			, dataOrig = ender.fn.data
+			//, dataOrig = ender.fn.data
 			, triggerOrig = ender.fn.trigger
 			, findOrig = ender.fn.find
 			, enderOrig = ender
@@ -49,6 +49,7 @@
 		}
 		// provide a $().map() for elements like jQuery
 		ender.fn.map = function(fn) { return ender.map(this, function(e) { return fn.call(e) }) }
+		/*
 		function camelize(s) {
 			return s.replace(/-(.)/g, function (m, m1) { return m1.toUpperCase() })
 		}
@@ -67,6 +68,7 @@
 		ender.fn.data = function() {
 			return (arguments.length ? dataOrig : data).apply(this, arguments)
 		}
+		*/
 		// provider a $().trigger() that takes an object as an argument
 		ender.fn.trigger = function(t) {
 			var args = arguments
@@ -334,7 +336,7 @@
 
           that.$element
             .appendTo(document.body)
-            .show()
+            .show('block')
 
           if (transition) {
             that.$element[0].offsetWidth // force reflow
