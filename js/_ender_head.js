@@ -18,6 +18,7 @@
 				enderOrig.domReady : enderOrig).apply(this, arguments)
 		}
 		for (p in enderOrig) ender[p] = enderOrig[p]
+		window['$'] === enderOrig && (window['$'] = ender)
 
 		// link Bonzo and Bean so bonzo.remove() triggers a bean.remove()
 		ender.fn.remove = function() {

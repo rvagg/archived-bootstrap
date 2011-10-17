@@ -18,6 +18,7 @@
 				enderOrig.domReady : enderOrig).apply(this, arguments)
 		}
 		for (p in enderOrig) ender[p] = enderOrig[p]
+		window['$'] === enderOrig && (window['$'] = ender)
 
 		// link Bonzo and Bean so bonzo.remove() triggers a bean.remove()
 		ender.fn.remove = function() {
@@ -1061,16 +1062,4 @@
   })
 
 }( window.jQuery || window.ender );
-
-ender.ender({
-	alert: ender.fn.alert,
-	dropdown: ender.fn.dropdown,
-	modal: ender.fn.modal,
-	tabs: ender.fn.tabs,
-	pills: ender.fn.pills,
-	twipsy: ender.fn.twipsy,
-	popover: ender.fn.popover,
-	scrollSpy: ender.fn.scrollSpy
-}, true);
-
 })()

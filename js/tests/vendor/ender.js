@@ -26,6 +26,7 @@
     , old = context.$
 
   function require (identifier) {
+    // modules can be required from ender's build system, or found on the window
     var module = modules[identifier] || window[identifier]
     if (!module) throw new Error("Requested module '" + identifier + "' has not been defined.")
     return module
@@ -38,9 +39,6 @@
   context['provide'] = provide
   context['require'] = require
 
-  // Implements Ender's $ global access object
-  // =========================================
-
   function aug(o, o2) {
     for (var k in o2) k != 'noConflict' && k != '_VERSION' && (o[k] = o2[k])
     return o
@@ -48,7 +46,7 @@
 
   function boosh(s, r, els) {
     // string || node || nodelist || window
-    if (ender._select && (typeof s == 'string' || s.nodeName || s.length && 'item' in s || s == window)) {
+    if (typeof s == 'string' || s.nodeName || (s.length && 'item' in s) || s == window) {
       els = ender._select(s, r)
       els.selector = s
     } else els = isFinite(s.length) ? s : [s]
@@ -60,7 +58,7 @@
   }
 
   aug(ender, {
-      _VERSION: '0.3.4'
+      _VERSION: '0.3.6'
     , fn: boosh // for easy compat to jQuery plugins
     , ender: function (o, chain) {
         aug(chain ? boosh : ender, o)
@@ -523,6 +521,7 @@
       , uidList = []
       , uuids = 0
       , digit = /^-?[\d\.]+$/
+      , dattr = /^data-(.+)$/
       , px = 'px'
       , setAttribute = 'setAttribute'
       , getAttribute = 'getAttribute'
@@ -566,6 +565,23 @@
       return s.replace(/-(.)/g, function (m, m1) {
         return m1.toUpperCase()
       })
+    }
+  
+    function decamelize(s) {
+      return s ? s.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase() : s
+    }
+  
+    function data(el) {
+      el[getAttribute]('data-node-uid') || el[setAttribute]('data-node-uid', ++uuids)
+      uid = el[getAttribute]('data-node-uid')
+      return uidList[uid] || (uidList[uid] = {})
+    }
+  
+    function dataValue(d) {
+      try {
+        return d === 'true' ? true : d === 'false' ? false : d === 'null' ? null : !isNaN(d) ? parseFloat(d) : d;
+      } catch(e) {}
+      return undefined
     }
   
     function isNode(node) {
@@ -1004,19 +1020,20 @@
         }
   
       , data: function (k, v) {
-          var el = this[0], uid, o
+          var el = this[0], uid, o, m
           if (typeof v === 'undefined') {
-            el[getAttribute]('data-node-uid') || el[setAttribute]('data-node-uid', ++uuids)
-            uid = el[getAttribute]('data-node-uid')
-            uidList[uid] || (uidList[uid] = {})
-            return uidList[uid][k]
+            o = data(el)
+            if (typeof k === 'undefined') {
+              each(el.attributes, function(a) {
+                (m = (''+a.name).match(dattr)) && (o[camelize(m[1])] = dataValue(a.value))
+              })
+              return o
+            } else {
+              return typeof o[k] === 'undefined' ?
+                (o[k] = dataValue(this.attr('data-' + decamelize(k)))) : o[k]
+            }
           } else {
-            return this.each(function (el) {
-              el[getAttribute]('data-node-uid') || el[setAttribute]('data-node-uid', ++uuids)
-              uid = el[getAttribute]('data-node-uid')
-              o = uidList[uid] || (uidList[uid] = {})
-              o[k] = v
-            })
+            return this.each(function (el) { data(el)[k] = v })
           }
         }
   
@@ -1232,11 +1249,11 @@
       },
   
       first: function () {
-        return this.length ? $(this[0]) : this
+        return $(this.length ? this[0] : this)
       },
   
       last: function () {
-        return this.length ? $(this[this.length - 1]) : this
+        return $(this.length ? this[this.length - 1] : [])
       },
   
       next: function () {
