@@ -6,6 +6,7 @@
 		var removeOrig = ender.fn.remove 
 			, delegateOrig = ender.fn.delegate
 			//, dataOrig = ender.fn.data
+			, mapOrig = ender.fn.map
 			, triggerOrig = ender.fn.trigger
 			, findOrig = ender.fn.find
 			, enderOrig = ender
@@ -48,8 +49,14 @@
 			}
 			return delegateOrig.apply(this, arguments)
 		}
-		// provide a $().map() for elements like jQuery
-		ender.fn.map = function(fn) { return ender.map(this, function(e) { return fn.call(e) }) }
+		// provide a $().map() for elements like jQuery where you can use 'this' for each element
+		// rather than 'this' being the whole context array, but only in cases where the callback
+		// has no arguments
+		ender.fn.map = function(fn) {
+			if (!fn.length)
+				return ender.map(this, function(e) { return fn.call(e) })
+			return mapOrig.apply(this, arguments)
+		}
 		/*
 		function camelize(s) {
 			return s.replace(/-(.)/g, function (m, m1) { return m1.toUpperCase() })
