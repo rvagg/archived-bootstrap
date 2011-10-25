@@ -1,33 +1,35 @@
 //==============================================================//
 // TWITTER BOOTSTRAP FOR ENDER                                  //
 
-!(function() {
-	!function() {
-		var removeOrig = ender.fn.remove 
-			, delegateOrig = ender.fn.delegate
-			//, dataOrig = ender.fn.data
-			, mapOrig = ender.fn.map
-			, triggerOrig = ender.fn.trigger
-			, findOrig = ender.fn.find
-			, enderOrig = ender
 
-		// and now for something completely different...
-		// support jQuery style $(function() {}) shorthand for $(document).ready(function() {})
-		// but this means making a proxy for ender(), which isn't trivial
-		ender = function() {
-			return (arguments.length && typeof arguments[0] == 'function' ?
-				enderOrig.domReady : enderOrig).apply(this, arguments)
-		}
-		for (p in enderOrig) ender[p] = enderOrig[p]
-		window['$'] === enderOrig && (window['$'] = ender)
+var enderOrig = ender
+!(function() {
+	// and now for something completely different...
+	// support jQuery style $(function() {}) shorthand for $(document).ready(function() {})
+	// but this means making a proxy for ender(), which isn't trivial
+	var ender = function() {
+		return (arguments.length && typeof arguments[0] == 'function' ?
+			enderOrig.domReady : enderOrig).apply(this, arguments)
+	}
+	for (p in enderOrig) ender[p] = enderOrig[p]
+	var $ = ender
+	//window['$'] === enderOrig && (window['$'] = ender)
+
+	!function() {
+		var removeOrig = enderOrig.fn.remove 
+			, delegateOrig = enderOrig.fn.delegate
+			//, dataOrig = ender.fn.data
+			, mapOrig = enderOrig.fn.map
+			, triggerOrig = enderOrig.fn.trigger
+			, findOrig = enderOrig.fn.find
 
 		// link Bonzo and Bean so bonzo.remove() triggers a bean.remove()
-		ender.fn.remove = function() {
+		enderOrig.fn.remove = function() {
 			this.unbind()
 			return removeOrig.apply(this, arguments)
 		}
 		// fill in for the missing bonzo.parent() with bonzo.closest()
-		ender.fn.parent = function() {
+		enderOrig.fn.parent = function() {
 			if (arguments.length) return this.closest.apply(this, arguments)
 			var r = []
 			$.each(this, function(e) { e && e.parentNode && r.push(e.parentNode) })
@@ -35,7 +37,7 @@
 		}
 		// handle a 'return false' from event listeners like jQuery
 		// i.e. stop propagation and prevent default
-		ender.fn.delegate = function() {
+		enderOrig.fn.delegate = function() {
 			if (arguments.length > 2 && typeof arguments[2] == 'function') {
 				var fn = arguments[2]
 				arguments[2] = function(e) {
@@ -52,9 +54,10 @@
 		// provide a $().map() for elements like jQuery where you can use 'this' for each element
 		// rather than 'this' being the whole context array, but only in cases where the callback
 		// has no arguments
-		ender.fn.map = function(fn) {
-			if (!fn.length)
-				return ender.map(this, function(e) { return fn.call(e) })
+		// this is a bit smelly but has to be done to avoid touching the original
+		enderOrig.fn.map = function(fn) {
+			if (!fn.length) // no args
+				return mapOrig.call(this, function(e) { return fn.call(e) })
 			return mapOrig.apply(this, arguments)
 		}
 		/*
@@ -78,21 +81,21 @@
 		}
 		*/
 		// provider a $().trigger() that takes an object as an argument
-		ender.fn.trigger = function(t) {
+		enderOrig.fn.trigger = function(t) {
 			var args = arguments
 			if (typeof t != 'string' && t.type) args = [t.type, t]
 			return triggerOrig.apply(this, args)
 		}
 		// remove prefixed '>' from selector sent to find(), qwery can't handle it
-		ender.fn.find = function(s) {
+		enderOrig.fn.find = function(s) {
 			return findOrig.call(this, s = /^>/.test(s) ? s.substring(1) : s)
 		}
 		// provide $.data(e, k, v) like jQuery
-		ender.data = function(e, k, v) { return ender.fn.data.call($(e), k, v) }
-		ender.proxy = function(fn, ctx) {
+		enderOrig.data = function(e, k, v) { return enderOrig.fn.data.call($(e), k, v) }
+		enderOrig.proxy = function(fn, ctx) {
 			return function() { return fn.apply(ctx, arguments) }
 		}
 
-		!ender.support && (ender.support = {})
+		!enderOrig.support && (enderOrig.support = {})
 	}()
 
