@@ -3,25 +3,27 @@
 
 
 var enderOrig = ender
-!(function() {
+!(function(window, _window) {
 	// and now for something completely different...
 	// support jQuery style $(function() {}) shorthand for $(document).ready(function() {})
 	// but this means making a proxy for ender(), which isn't trivial
+
 	var ender = function() {
 		return (arguments.length && typeof arguments[0] == 'function' ?
-			enderOrig.domReady : enderOrig).apply(this, arguments)
+			enderOrig.domReady : enderOrig).apply(
+				  this
+				, arguments.length && arguments[0] === window ? [_window] : arguments
+			)
 	}
 	for (p in enderOrig) ender[p] = enderOrig[p]
 	var $ = ender
-	//window['$'] === enderOrig && (window['$'] = ender)
+	window['$'] = window['ender'] = ender
 
 	!function() {
 		var removeOrig = enderOrig.fn.remove 
 			, delegateOrig = enderOrig.fn.delegate
-			//, dataOrig = ender.fn.data
 			, mapOrig = enderOrig.fn.map
 			, triggerOrig = enderOrig.fn.trigger
-			, findOrig = enderOrig.fn.find
 
 		// link Bonzo and Bean so bonzo.remove() triggers a bean.remove()
 		enderOrig.fn.remove = function() {
@@ -60,21 +62,6 @@ var enderOrig = ender
 				return mapOrig.call(this, function(e) { return fn.call(e) })
 			return mapOrig.apply(this, arguments)
 		}
-		/*
-		function camelize(s) {
-			return s.replace(/-(.)/g, function (m, m1) { return m1.toUpperCase() })
-		}
-		function dataValue(d) {
-			try {
-				return d = d === "true" ? true : d === "false" ? false : d === "null" ? null : !isNaN(d) ? parseFloat(d) : d;
-			} catch(e) {}
-			return d
-		}
-		function data() {
-			var d = {}
-			$.each(this[0].attributes, function(a) { /^data-/.test(a.name) && (d[camelize((""+a.name).substring(5))] = dataValue(a.value)) })
-			return d
-		}
 		// provide a $().data() to dump all data contents, Bonzo only gives us $().data(key)
 		ender.fn.data = function() {
 			return (arguments.length ? dataOrig : data).apply(this, arguments)
@@ -86,17 +73,14 @@ var enderOrig = ender
 			if (typeof t != 'string' && t.type) args = [t.type, t]
 			return triggerOrig.apply(this, args)
 		}
-		// remove prefixed '>' from selector sent to find(), qwery can't handle it
-		enderOrig.fn.find = function(s) {
-			return findOrig.call(this, s = /^>/.test(s) ? s.substring(1) : s)
-		}
 		// provide $.data(e, k, v) like jQuery
-		enderOrig.data = function(e, k, v) { return enderOrig.fn.data.call($(e), k, v) }
-		enderOrig.proxy = function(fn, ctx) {
+		ender.data = function(e, k, v) { return enderOrig.fn.data.call($(e), k, v) }
+		ender.proxy = function(fn, ctx) {
 			return function() { return fn.apply(ctx, arguments) }
 		}
 
-		!enderOrig.support && (enderOrig.support = {})
+
+		!enderOrig.support && (ender.support = enderOrig.support = {})
 	}()
 
 /* ==========================================================
@@ -1072,4 +1056,4 @@ var enderOrig = ender
   })
 
 }( window.jQuery || window.ender );
-})()
+})({}, window)
