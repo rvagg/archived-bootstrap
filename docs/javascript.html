@@ -343,7 +343,7 @@ $('#my-modal').bind('hidden', function () {
           <button id="fat-btn" data-loading-text="loading..." class="btn danger">Loading Demo</button>
           <button class="btn" data-toggle="toggle">Toggle Demo</button>
           <script>
-            $(function() {
+            $.domReady(function() {
               var btn = $('#fat-btn').click(function () {
                 btn.button('loading')
                 setTimeout(function () {

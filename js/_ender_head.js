@@ -62,11 +62,6 @@ var enderOrig = ender
 				return mapOrig.call(this, function(e) { return fn.call(e) })
 			return mapOrig.apply(this, arguments)
 		}
-		// provide a $().data() to dump all data contents, Bonzo only gives us $().data(key)
-		ender.fn.data = function() {
-			return (arguments.length ? dataOrig : data).apply(this, arguments)
-		}
-		*/
 		// provider a $().trigger() that takes an object as an argument
 		enderOrig.fn.trigger = function(t) {
 			var args = arguments

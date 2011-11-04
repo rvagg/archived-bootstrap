@@ -62,11 +62,6 @@ var enderOrig = ender
 				return mapOrig.call(this, function(e) { return fn.call(e) })
 			return mapOrig.apply(this, arguments)
 		}
-		// provide a $().data() to dump all data contents, Bonzo only gives us $().data(key)
-		ender.fn.data = function() {
-			return (arguments.length ? dataOrig : data).apply(this, arguments)
-		}
-		*/
 		// provider a $().trigger() that takes an object as an argument
 		enderOrig.fn.trigger = function(t) {
 			var args = arguments
@@ -84,7 +79,7 @@ var enderOrig = ender
 	}()
 
 /* ==========================================================
- * bootstrap-alerts.js v1.3.0
+ * bootstrap-alerts.js v1.4.0
  * http://twitter.github.com/bootstrap/javascript.html#alerts
  * ==========================================================
  * Copyright 2011 Twitter, Inc.
@@ -105,6 +100,8 @@ var enderOrig = ender
 
 !function( $ ){
 
+  "use strict"
+
   /* CSS TRANSITION SUPPORT (https://gist.github.com/373874)
    * ======================================================= */
 
@@ -123,11 +120,11 @@ var enderOrig = ender
      if ( $.support.transition ) {
        transitionEnd = "TransitionEnd"
        if ( $.browser.webkit ) {
-       	transitionEnd = "webkitTransitionEnd"
+        transitionEnd = "webkitTransitionEnd"
        } else if ( $.browser.mozilla ) {
-       	transitionEnd = "transitionend"
+        transitionEnd = "transitionend"
        } else if ( $.browser.opera ) {
-       	transitionEnd = "oTransitionEnd"
+        transitionEnd = "oTransitionEnd"
        }
      }
 
@@ -195,7 +192,7 @@ var enderOrig = ender
 
 }( window.jQuery || window.ender );
 /* ============================================================
- * bootstrap-dropdown.js v1.3.0
+ * bootstrap-dropdown.js v1.4.0
  * http://twitter.github.com/bootstrap/javascript.html#dropdown
  * ============================================================
  * Copyright 2011 Twitter, Inc.
@@ -215,6 +212,8 @@ var enderOrig = ender
 
 
 !function( $ ){
+
+  "use strict"
 
   /* DROPDOWN PLUGIN DEFINITION
    * ========================== */
@@ -249,7 +248,7 @@ var enderOrig = ender
 }( window.jQuery || window.ender );
 
 /* =========================================================
- * bootstrap-modal.js v1.3.0
+ * bootstrap-modal.js v1.4.0
  * http://twitter.github.com/bootstrap/javascript.html#modal
  * =========================================================
  * Copyright 2011 Twitter, Inc.
@@ -269,6 +268,8 @@ var enderOrig = ender
 
 
 !function( $ ){
+
+  "use strict"
 
  /* CSS TRANSITION SUPPORT (https://gist.github.com/373874)
   * ======================================================= */
@@ -337,8 +338,7 @@ var enderOrig = ender
             that.$element[0].offsetWidth // force reflow
           }
 
-          that.$element
-            .addClass('in')
+          that.$element.addClass('in')
 
           transition ?
             that.$element.one(transitionEnd, function () { that.$element.trigger('shown') }) :
@@ -365,17 +365,9 @@ var enderOrig = ender
           .trigger('hide')
           .removeClass('in')
 
-        function removeElement () {
-          that.$element
-            .hide()
-            .trigger('hidden')
-
-          backdrop.call(that)
-        }
-
         $.support.transition && this.$element.hasClass('fade') ?
-          this.$element.one(transitionEnd, removeElement) :
-          removeElement()
+          hideWithTransition.call(this) :
+          hideModal.call(this)
 
         return this
       }
@@ -385,6 +377,28 @@ var enderOrig = ender
 
  /* MODAL PRIVATE METHODS
   * ===================== */
+
+  function hideWithTransition() {
+    // firefox drops transitionEnd events :{o
+    var that = this
+      , timeout = setTimeout(function () {
+          that.$element.unbind(transitionEnd)
+          hideModal.call(that)
+        }, 500)
+
+    this.$element.one(transitionEnd, function () {
+      clearTimeout(timeout)
+      hideModal.call(that)
+    })
+  }
+
+  function hideModal (that) {
+    this.$element
+      .hide()
+      .trigger('hidden')
+
+    backdrop.call(this)
+  }
 
   function backdrop ( callback ) {
     var that = this
@@ -412,17 +426,18 @@ var enderOrig = ender
     } else if ( !this.isShown && this.$backdrop ) {
       this.$backdrop.removeClass('in')
 
-      function removeElement() {
-        that.$backdrop.remove()
-        that.$backdrop = null
-      }
-
       $.support.transition && this.$element.hasClass('fade')?
-        this.$backdrop.one(transitionEnd, removeElement) :
-        removeElement()
+        this.$backdrop.one(transitionEnd, $.proxy(removeBackdrop, this)) :
+        removeBackdrop.call(this)
+
     } else if ( callback ) {
        callback()
     }
+  }
+
+  function removeBackdrop() {
+    this.$backdrop.remove()
+    this.$backdrop = null
   }
 
   function escape() {
@@ -493,8 +508,70 @@ var enderOrig = ender
 
 }( window.jQuery || window.ender );
 
+/* ============================================================
+ * bootstrap-dropdown.js v1.4.0
+ * http://twitter.github.com/bootstrap/javascript.html#dropdown
+ * ============================================================
+ * Copyright 2011 Twitter, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ============================================================ */
+
+!function( $ ){
+
+  "use strict"
+
+  function setState(el, state) {
+    var d = 'disabled'
+      , $el = $(el)
+      , data = $el.data()
+
+    state = state + 'Text'
+    data.resetText || $el.data('resetText', $el.html())
+
+    $el.html( data[state] || $.fn.button.defaults[state] )
+
+    state == 'loadingText' ?
+      $el.addClass(d).attr(d, d) :
+      $el.removeClass(d).removeAttr(d)
+  }
+
+  function toggle(el) {
+    $(el).toggleClass('active')
+  }
+
+  $.fn.button = function(options) {
+    return this.each(function () {
+      if (options == 'toggle') {
+        return toggle(this)
+      }
+      options && setState(this, options)
+    })
+  }
+
+  $.fn.button.defaults = {
+    loadingText: 'loading...'
+  }
+
+  $(function () {
+    $('body').delegate('.btn[data-toggle]', 'click', function () {
+      $(this).button('toggle')
+    })
+  })
+
+}( window.jQuery || window.ender );
 /* ========================================================
- * bootstrap-tabs.js v1.3.0
+ * bootstrap-tabs.js v1.4.0
  * http://twitter.github.com/bootstrap/javascript.html#tabs
  * ========================================================
  * Copyright 2011 Twitter, Inc.
@@ -515,6 +592,8 @@ var enderOrig = ender
 
 !function( $ ){
 
+  "use strict"
+
   function activate ( element, container ) {
     container
       .find('> .active')
@@ -534,6 +613,7 @@ var enderOrig = ender
       , $ul = $this.closest('ul:not(.dropdown-menu)')
       , href = $this.attr('href')
       , previous
+      , $href
 
     if ( /^#\w+/.test(href) ) {
       e.preventDefault()
@@ -572,7 +652,7 @@ var enderOrig = ender
 }( window.jQuery || window.ender );
 
 /* ==========================================================
- * bootstrap-twipsy.js v1.3.0
+ * bootstrap-twipsy.js v1.4.0
  * http://twitter.github.com/bootstrap/javascript.html#twipsy
  * Adapted from the original jQuery.tipsy by Jason Frame
  * ==========================================================
@@ -593,6 +673,8 @@ var enderOrig = ender
 
 
 !function( $ ) {
+
+  "use strict"
 
  /* CSS TRANSITION SUPPORT (https://gist.github.com/373874)
   * ======================================================= */
@@ -643,7 +725,7 @@ var enderOrig = ender
         , $tip
         , tp
 
-      if (this.getTitle() && this.enabled) {
+      if (this.hasContent() && this.enabled) {
         $tip = this.tip()
         this.setContent()
 
@@ -716,6 +798,10 @@ var enderOrig = ender
       }
     }
 
+  , hasContent: function () {
+      return this.getTitle()
+    }
+
   , getTitle: function() {
       var title
         , $e = this.$element
@@ -736,7 +822,7 @@ var enderOrig = ender
 
   , tip: function() {
       if (!this.$tip) {
-        this.$tip = $('<div class="twipsy" />').html('<div class="twipsy-arrow"></div><div class="twipsy-inner"></div>')
+        this.$tip = $('<div class="twipsy" />').html(this.options.template)
       }
       return this.$tip
     }
@@ -867,15 +953,16 @@ var enderOrig = ender
   , offset: 0
   , title: 'title'
   , trigger: 'hover'
+  , template: '<div class="twipsy-arrow"></div><div class="twipsy-inner"></div>'
   }
 
   $.fn.twipsy.elementOptions = function(ele, options) {
-    return $.metadata ? $.extend({}, options, $(ele).metadata()) : options
+    return $.extend({}, options, $(ele).data())
   }
 
 }( window.jQuery || window.ender );
 /* ===========================================================
- * bootstrap-popover.js v1.3.0
+ * bootstrap-popover.js v1.4.0
  * http://twitter.github.com/bootstrap/javascript.html#popover
  * ===========================================================
  * Copyright 2011 Twitter, Inc.
@@ -896,6 +983,8 @@ var enderOrig = ender
 
 !function( $ ) {
 
+ "use strict"
+
   var Popover = function ( element, options ) {
     this.$element = $(element)
     this.options = options
@@ -915,13 +1004,17 @@ var enderOrig = ender
       $tip[0].className = 'popover'
     }
 
+  , hasContent: function () {
+      return this.getTitle() || this.getContent()
+    }
+
   , getContent: function () {
       var content
        , $e = this.$element
        , o = this.options
 
       if (typeof this.options.content == 'string') {
-        content = $e.attr(o.content)
+        content = this.options.content
       } else if (typeof this.options.content == 'function') {
         content = this.options.content.call(this.$element[0])
       }
@@ -931,7 +1024,7 @@ var enderOrig = ender
   , tip: function() {
       if (!this.$tip) {
         this.$tip = $('<div class="popover" />')
-          .html('<div class="arrow"></div><div class="inner"><h3 class="title"></h3><div class="content"><p></p></div></div>')
+          .html(this.options.template)
       }
       return this.$tip
     }
@@ -948,11 +1041,14 @@ var enderOrig = ender
     return this
   }
 
-  $.fn.popover.defaults = $.extend({} , $.fn.twipsy.defaults, { content: 'data-content', placement: 'right'})
+  $.fn.popover.defaults = $.extend({} , $.fn.twipsy.defaults, {
+    placement: 'right'
+  , template: '<div class="arrow"></div><div class="inner"><h3 class="title"></h3><div class="content"><p></p></div></div>'
+  })
 
 }( window.jQuery || window.ender );
 /* =============================================================
- * bootstrap-scrollspy.js v1.3.0
+ * bootstrap-scrollspy.js v1.4.0
  * http://twitter.github.com/bootstrap/javascript.html#scrollspy
  * =============================================================
  * Copyright 2011 Twitter, Inc.
@@ -972,6 +1068,8 @@ var enderOrig = ender
 
 
 !function ( $ ) {
+
+  "use strict"
 
   var $window = $(window)
 
