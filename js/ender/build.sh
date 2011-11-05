@@ -7,7 +7,7 @@ FOOT="_ender_foot.js"
 
 cat $HEAD > $OUT
 for i in $SOURCES; do
-	cat $i >> $OUT
+	cat ../$i >> $OUT
 	echo "" >> $OUT
 done
 cat $FOOT >> $OUT
