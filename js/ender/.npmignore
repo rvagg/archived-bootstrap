@@ -1,8 +1,4 @@
-bootstrap-alerts.js
-bootstrap-dropdown.js
-bootstrap-modal.js
-bootstrap-popover.js
-bootstrap-scrollspy.js
-bootstrap-tabs.js
-bootstrap-twipsy.js
-tests/
+build.sh
+_ender_foot.js
+_ender_head.js
+.npmignore
