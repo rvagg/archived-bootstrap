@@ -10,7 +10,7 @@ Requires an Ender build with qwery, bonzo, bean, bowser, domready & valentine
 Status
 ------
 
-It's almost all working, I'm just waiting on (@ded)[https://github.com/ded/] to push a new bowser release with a `mozilla` alias and for (@fat)[https://github.com/fat/] to accept a pull request on bean for `one()` support.
+It's almost all working, I'm just waiting on [@ded](https://github.com/ded/) to push a new bowser release with a `mozilla` alias and for [@fat](https://github.com/fat/) to accept a pull request on bean for `one()` support.
 
 However, a fully working build of ender with my latest can be found inside js/tests/vendor/
 
