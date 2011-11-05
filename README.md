@@ -7,7 +7,12 @@ Changes can be seen here: https://github.com/rvagg/bootstrap/compare/master...en
 
 Requires an Ender build with qwery, bonzo, bean, bowser, domready & valentine
 
-So far most of it is working except for **Modals** (if you need Modals then clone this baby and fix it!).
+Status
+------
+
+It's almost all working, I'm just waiting on (@ded)[https://github.com/ded/] to push a new bowser release with a `mozilla` alias and for (@fat)[https://github.com/fat/] to accept a pull request on bean for `one()` support.
+
+However, a fully working build of ender with my latest can be found inside js/tests/vendor/
 
 There are some use cases that aren't supported as well:
 
@@ -19,6 +24,8 @@ won't work for example because we don't have `live()` in bean yet. Just call `tw
 
 See docs/javascript.html for an updated example using the Ender version and for details on what changes were made
 to get it working see the diff: https://github.com/rvagg/bootstrap/compare/master...ender#diff-1
+
+**A live example can be found at http://rvagg.github.com/bootstrap/docs/javascript.html** with zero jQueryness.
 
 Installing
 ----------
