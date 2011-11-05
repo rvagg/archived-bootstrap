@@ -509,8 +509,8 @@ var enderOrig = ender
 }( window.jQuery || window.ender );
 
 /* ============================================================
- * bootstrap-dropdown.js v1.4.0
- * http://twitter.github.com/bootstrap/javascript.html#dropdown
+ * bootstrap-buttons.js v1.4.0
+ * http://twitter.github.com/bootstrap/javascript.html#buttons
  * ============================================================
  * Copyright 2011 Twitter, Inc.
  *
@@ -570,7 +570,6 @@ var enderOrig = ender
   })
 
 }( window.jQuery || window.ender );
-
 /* ========================================================
  * bootstrap-tabs.js v1.4.0
  * http://twitter.github.com/bootstrap/javascript.html#tabs
