@@ -1,16 +1,21 @@
 TWITTER BOOTSTRAP FOR ENDER
 ===========================
 
-This is a simple fork of https://github.com/twitter/bootstrap with some changes to support Ender without jQuery.
+Look ma', no jQuery!
+--------------------
 
-Changes can be seen here: https://github.com/rvagg/bootstrap/compare/master...ender
+This is a simple port of https://github.com/twitter/bootstrap with some changes to support use with Ender without jQuery.
 
-Requires an Ender build with the **Jeesh** + Bowser (i.e. domReady, Qwery, Bonzo, Bean & Bowser)
+It simply requires an Ender build with the Jeesh + Bowser (i.e. domReady, Qwery, Bonzo, Bean & Bowser)
+
+**ender-twitter-bootstrap** is available in NPM so to build with Ender simply run `ender build ender-twitter-bootstrap`.
 
 Status
 ------
 
-The port is complete, minus any un-found bugs which I trust you will put in a pull-request to fix for us. Tested in IE7+ and the other usual suspects.
+The port is complete, minus any un-found bugs which I trust you will put in a pull-request to fix for the rest of us. Tested in IE7+ and the other usual suspects.
+
+The approach taken is to touch the original Bootstrap files as little as possible and just wrap them in a *copy* of Ender with a bunch of shims applied that fix up anything that Bootstrap is expecting from jQuery that Ender doesn't have or do (not a whole lot). So keeping the port up to date with the latest Bootstrap code is relatively easy.
 
 At least one use-case that isn't supported is:
 
