@@ -10,5 +10,5 @@
     }
   , "main"          : "bootstrap-ender.js"
   , "ender"         : "noop"
-  , "version"       : "1.3.9"
+  , "version"       : "1.4.0"
 }
