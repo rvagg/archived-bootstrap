@@ -1,9 +1,9 @@
 {
     "name": "ender-twitter-bootstrap"
-  , "description": "*Unofficial* jQuery-less Ender port of twitter's Bootstrap JS"
+  , "description": "*Unofficial* jQuery-less Ender port of Twitter's Bootstrap JS - original by @fat & @mdo"
   , "url": "https://github.com/rvagg/bootstrap"
   , "keywords": ["twitter", "bootstrap", "ender"]
-  , "author": "Twitter - @mdo & @fat, modified by Rod Vagg <rod@vagg.org>"
+  , "author": "Rod Vagg"
   , "contributors": []
   , "dependencies": {
        "qwery": "*", "bonzo": "*", "bean": "*", "bowser": "*", "domready": "*", "valentine": "*"
