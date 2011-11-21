@@ -196,6 +196,7 @@ var enderOrig = ender
   * ====================== */
 
   var Alert = function ( content, options ) {
+    if (options == 'close') return this.close.call(content)
     this.settings = $.extend({}, $.fn.alert.defaults, options)
     this.$element = $(content)
       .delegate(this.settings.selector, 'click', this.close)
@@ -204,7 +205,10 @@ var enderOrig = ender
   Alert.prototype = {
 
     close: function (e) {
-      var $element = $(this).parent('.alert-message')
+      var $element = $(this)
+        , className = 'alert-message'
+
+      $element = $element.hasClass(className) ? $element : $element.parent()
 
       e && e.preventDefault()
       $element.removeClass('in')
@@ -232,9 +236,16 @@ var enderOrig = ender
 
     return this.each(function () {
       var $this = $(this)
+        , data
 
       if ( typeof options == 'string' ) {
-        return $this.data('alert')[options]()
+
+        data = $this.data('alert')
+
+        if (typeof data == 'object') {
+          return data[options].call( $this )
+        }
+
       }
 
       $(this).data('alert', new Alert( this, options ))
@@ -603,9 +614,11 @@ var enderOrig = ender
 
     $el.html( data[state] || $.fn.button.defaults[state] )
 
-    state == 'loadingText' ?
-      $el.addClass(d).attr(d, d) :
-      $el.removeClass(d).removeAttr(d)
+    setTimeout(function () {
+      state == 'loadingText' ?
+        $el.addClass(d).attr(d, d) :
+        $el.removeClass(d).removeAttr(d)
+    }, 0)
   }
 
   function toggle(el) {
@@ -883,10 +896,7 @@ var enderOrig = ender
     }
 
   , tip: function() {
-      if (!this.$tip) {
-        this.$tip = $('<div class="twipsy" />').html(this.options.template)
-      }
-      return this.$tip
+      return this.$tip = this.$tip || $('<div class="twipsy" />').html(this.options.template)
     }
 
   , validate: function() {
@@ -907,6 +917,10 @@ var enderOrig = ender
 
   , toggleEnabled: function() {
       this.enabled = !this.enabled
+    }
+
+  , toggle: function () {
+      this[this.tip().hasClass('in') ? 'hide' : 'show']()
     }
 
   }
@@ -1018,8 +1032,18 @@ var enderOrig = ender
   , template: '<div class="twipsy-arrow"></div><div class="twipsy-inner"></div>'
   }
 
+  $.fn.twipsy.rejectAttrOptions = [ 'title' ]
+
   $.fn.twipsy.elementOptions = function(ele, options) {
-    return $.extend({}, options, $(ele).data())
+    var data = $(ele).data()
+      , rejects = $.fn.twipsy.rejectAttrOptions
+      , i = rejects.length
+
+    while (i--) {
+      delete data[rejects[i]]
+    }
+
+    return $.extend({}, options, data)
   }
 
 }( window.jQuery || window.ender );
