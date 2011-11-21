@@ -13,7 +13,7 @@
 
     <!-- Le javascript -->
     <script src="../js/tests/vendor/ender.js"></script>
-    <script src="../js/bootstrap-ender.js"></script>
+    <script src="../js/ender/bootstrap-ender.js"></script>
     <script src="assets/js/google-code-prettify/prettify.js"></script>
     <script>$.domReady(function () { prettyPrint() })</script>
 
@@ -418,7 +418,7 @@ $('#my-modal').bind('hidden', function () {
 					</table>
 
 					<pre class="prettyprint linenums">
-$('#.tabs').bind('change', function (e) {
+$('.tabs a').bind('change', function (e) {
   e.target // activated tab
   e.relatedTarget // previous tab
 })</pre>
@@ -480,8 +480,8 @@ $('#.tabs').bind('change', function (e) {
             <thead>
              <tr>
                <th style="width: 100px;">Name</th>
-               <th style="width: 100px;">type</th>
-               <th style="width: 50px;">default</th>
+               <th style="width: 95px;">type</th>
+               <th style="width: 95px;">default</th>
                <th>description</th>
              </tr>
             </thead>
@@ -550,7 +550,7 @@ $('#.tabs').bind('change', function (e) {
                <td>template</td>
                <td>string</td>
                <td>[default markup]</td>
-               <td>The html template used for rendering a twipsy.</td>
+               <td>the html template used for rendering a twipsy</td>
              </tr>
             </tbody>
           </table>
@@ -605,8 +605,8 @@ $('#.tabs').bind('change', function (e) {
             <thead>
              <tr>
                <th style="width: 100px;">Name</th>
-               <th style="width: 100px;">type</th>
-               <th style="width: 50px;">default</th>
+               <th style="width: 95px;">type</th>
+               <th style="width: 95px;">default</th>
                <th>description</th>
              </tr>
             </thead>
@@ -669,7 +669,7 @@ $('#.tabs').bind('change', function (e) {
                <td>content</td>
                <td>string, function</td>
                <td>'data-content'</td>
-               <td>a string or method for retrieving content text. if none are provided, content will be sourced from a data-content attribute.</td>
+               <td>attribute or method for retrieving content text.</td>
              </tr>
              <tr>
                <td>trigger</td>
@@ -681,7 +681,7 @@ $('#.tabs').bind('change', function (e) {
                <td>template</td>
                <td>string</td>
                <td>[default markup]</td>
-               <td>The html template used for rendering a popover.</td>
+               <td>the html template used for rendering a popover</td>
              </tr>
             </tbody>
           </table>

@@ -1,7 +1,7 @@
 /*!
   * =============================================================
   * Ender: open module JavaScript framework (https://ender.no.de)
-  * Build: ender build qwery bonzo ../../bean ../../bowser domready valentine --output tests/vendor/ender
+  * Build: ender build domready qwery bonzo bean bowser --output tests/vendor/ender
   * =============================================================
   */
 
@@ -94,6 +94,76 @@
 
   var module = { exports: {} }, exports = module.exports;
 
+  !function (name, definition) {
+    if (typeof define == 'function') define(definition)
+    else if (typeof module != 'undefined') module.exports = definition()
+    else this[name] = this['domReady'] = definition()
+  }('domready', function (ready) {
+  
+    var fns = [], fn, f = false
+      , doc = document
+      , testEl = doc.documentElement
+      , hack = testEl.doScroll
+      , domContentLoaded = 'DOMContentLoaded'
+      , addEventListener = 'addEventListener'
+      , onreadystatechange = 'onreadystatechange'
+      , loaded = /^loade|c/.test(doc.readyState)
+  
+    function flush(f) {
+      loaded = 1
+      while (f = fns.shift()) f()
+    }
+  
+    doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
+      doc.removeEventListener(domContentLoaded, fn, f)
+      flush()
+    }, f)
+  
+  
+    hack && doc.attachEvent(onreadystatechange, (fn = function () {
+      if (/^c/.test(doc.readyState)) {
+        doc.detachEvent(onreadystatechange, fn)
+        flush()
+      }
+    }))
+  
+    return (ready = hack ?
+      function (fn) {
+        self != top ?
+          loaded ? fn() : fns.push(fn) :
+          function () {
+            try {
+              testEl.doScroll('left')
+            } catch (e) {
+              return setTimeout(function() { ready(fn) }, 50)
+            }
+            fn()
+          }()
+      } :
+      function (fn) {
+        loaded ? fn() : fns.push(fn)
+      })
+  })
+
+  provide("domready", module.exports);
+
+  !function ($) {
+    var ready = require('domready')
+    $.ender({domReady: ready})
+    $.ender({
+      ready: function (f) {
+        ready(f)
+        return this
+      }
+    }, true)
+  }(ender);
+
+}();
+
+!function () {
+
+  var module = { exports: {} }, exports = module.exports;
+
   /*!
     * Qwery - A Blazing Fast query selector engine
     * https://github.com/ded/qwery
@@ -132,6 +202,10 @@
       , dividers = new RegExp('(' + splitters.source + ')' + splittersMore.source, 'g')
       , tokenizr = new RegExp(splitters.source + splittersMore.source)
       , chunker = new RegExp(simple.source + '(' + attr.source + ')?' + '(' + pseudo.source + ')?')
+        // check if we can pass a selector to a non-CSS3 compatible qSA.
+        // *not* suitable for validating a selector, it's too lose; it's the users' responsibility to pass valid selectors
+        // this regex must be kept in sync with the one in tests.js
+      , css2 = /^(([\w\-]*[#\.]?[\w\-]+|\*)?(\[[\w\-]+([\~\|]?=['"][ \w\-\/\?\&\=\:\.\(\)\!,@#%<>\{\}\$\*\^]+["'])?\])?(\:(link|visited|active|hover))?([\s>+~\.,]|(?:$)))+$/
       , walker = {
           ' ': function (node) {
             return node && node !== html && node.parentNode
@@ -204,7 +278,7 @@
     // div.hello[title="world"]:foo('bar'), div, .hello, [title="world"], title, =, world, :foo('bar'), foo, ('bar'), bar]
     function interpret(whole, tag, idsAndClasses, wholeAttribute, attribute, qualifier, value, wholePseudo, pseudo, wholePseudoVal, pseudoVal) {
       var i, m, k, o, classes
-      if (tag && this.tagName.toLowerCase() !== tag) return false
+      if (tag && this.tagName && this.tagName.toLowerCase() !== tag) return false
       if (idsAndClasses && (m = idsAndClasses.match(id)) && m[1] !== this.id) return false
       if (idsAndClasses && (classes = idsAndClasses.match(clas))) {
         for (i = classes.length; i--;) {
@@ -252,21 +326,20 @@
     }
   
     // given a selector, first check for simple cases then collect all base candidate matches and filter
-    function _qwery(selector) {
-      var r = [], ret = [], i, l, m, token, tag, els, root, intr, item
+    function _qwery(selector, _root) {
+      var r = [], ret = [], i, l, m, token, tag, els, intr, item, root = _root
         , tokens = tokenCache.g(selector) || tokenCache.s(selector, selector.split(tokenizr))
         , dividedTokens = selector.match(dividers)
   
       if (!tokens.length) return r
-      tokens = tokens.slice(0) // this makes a copy of the array so the cached original is not affected
   
-      token = tokens.pop()
-      root = tokens.length && (m = tokens[tokens.length - 1].match(idOnly)) ? doc[byId](m[1]) : doc
+      token = (tokens = tokens.slice(0)).pop() // copy cached tokens, take the last one
+      if (tokens.length && (m = tokens[tokens.length - 1].match(idOnly))) root = _root[byId](m[1])
       if (!root) return r
   
       intr = q(token)
       // collect base candidates to filter
-      els = root.nodeType !== 9 && dividedTokens && /^[+~]$/.test(dividedTokens[dividedTokens.length - 1]) ?
+      els = root !== _root && root.nodeType !== 9 && dividedTokens && /^[+~]$/.test(dividedTokens[dividedTokens.length - 1]) ?
         function (r) {
           while (root = root.nextSibling) {
             root.nodeType == 1 && (intr[1] ? intr[1] == root.tagName.toLowerCase() : 1) && (r[r.length] = root)
@@ -354,7 +427,7 @@
       }
       if (selector && arrayLike(selector)) return flatten(selector)
       if (m = selector.match(easy)) {
-        if (m[1]) return (el = doc[byId](m[1])) ? [el] : []
+        if (m[1]) return (el = root[byId](m[1])) ? [el] : []
         if (m[2]) return arrayify(root[byTag](m[2]))
         if (supportsCSS3 && m[3]) return arrayify(root[byClass](m[3]))
       }
@@ -368,16 +441,16 @@
       return function(s) {
         var oid, nid
         if (splittable.test(s)) {
-          if (root !== doc) {
+          if (root.nodeType !== 9) {
            // make sure the el has an id, rewrite the query, set root to doc and run it
            if (!(nid = oid = root.getAttribute('id'))) root.setAttribute('id', nid = '__qwerymeupscotty')
-           s = '#' + nid + s
-           collector(doc, s)
+           s = '[id="' + nid + '"]' + s // avoid byId and allow us to match context element
+           collector(root.parentNode || root, s, true)
            oid || root.removeAttribute('id')
           }
           return;
         }
-        s.length && collector(root, s)
+        s.length && collector(root, s, false)
       }
     }
   
@@ -386,7 +459,7 @@
         return (container.compareDocumentPosition(element) & 16) == 16
       } : 'contains' in html ?
       function (element, container) {
-        container = container == doc || container == window ? html : container
+        container = container.nodeType === 9 || container == window ? html : container
         return container !== element && container.contains(element)
       } :
       function (element, container) {
@@ -403,16 +476,21 @@
           } :
           function(e, a) { return e.getAttribute(a) }
      }()
+      // does native qSA support CSS3 level selectors
     , supportsCSS3 = function () {
-        // does native qSA support CSS3 level selectors
-        try {
-          return doc[byClass] && doc.querySelector && doc[qSA] && doc[qSA](':nth-of-type(1)').length
-        } catch (e) { return false }
+        if (doc[byClass] && doc.querySelector && doc[qSA]) {
+          try {
+            var p = doc.createElement('p')
+            p.innerHTML = '<a/>'
+            return p[qSA](':nth-of-type(1)').length
+          } catch (e) { }
+        }
+        return false
       }()
-    , select = supportsCSS3 ?
-      function (selector, root) {
+      // native support for CSS3 selectors
+    , selectCSS3 = function (selector, root) {
         var result = [], ss, e
-        if (root === doc || !splittable.test(selector)) {
+        if (root.nodeType === 9 || !splittable.test(selector)) {
           // most work is done right here, defer to qSA
           return arrayify(root[qSA](selector))
         }
@@ -423,13 +501,27 @@
           else if (e.length) result = result.concat(arrayify(e))
         }))
         return ss.length > 1 && result.length > 1 ? uniq(result) : result
-      } :
-      function (selector, root) {
+      }
+      // native support for CSS2 selectors only
+    , selectCSS2qSA = function (selector, root) {
+        var i, r, l, ss, result = []
+        selector = selector.replace(normalizr, '$1')
+        // safe to pass whole selector to qSA
+        if (!splittable.test(selector) && css2.test(selector)) return arrayify(root[qSA](selector))
+        each(ss = selector.split(','), collectSelector(root, function(ctx, s, rewrite) {
+          // use native qSA if selector is compatile, otherwise use _qwery()
+          r = css2.test(s) ? ctx[qSA](s) : _qwery(s, ctx)
+          for (i = 0, l = r.length; i < l; i++) {
+            if (ctx.nodeType === 9 || rewrite || isAncestor(r[i], root)) result[result.length] = r[i]
+          }
+        }))
+        return ss.length > 1 && result.length > 1 ? uniq(result) : result
+      }
+      // no native selector support
+    , selectNonNative = function (selector, root) {
         var result = [], m, i, l, r, ss
         selector = selector.replace(normalizr, '$1')
         if (m = selector.match(tagAndOrClass)) {
-          // simple & common case, safe to use non-CSS3 qSA if present
-          if (root[qSA]) return arrayify(root[qSA](selector))
           r = classRegex(m[2])
           items = root[byTag](m[1] || '*')
           for (i = 0, l = items.length; i < l; i++) {
@@ -438,14 +530,15 @@
           return result
         }
         // more complex selector, get `_qwery()` to do the work for us
-        each(ss = selector.split(','), collectSelector(root, function(ctx, s) {
-          var i = 0, r = _qwery(s), l = r.length
-          for (; i < l; i++) {
-            if (ctx === doc || isAncestor(r[i], root)) result[result.length] = r[i]
+        each(ss = selector.split(','), collectSelector(root, function(ctx, s, rewrite) {
+          r = _qwery(s, ctx)
+          for (i = 0, l = r.length; i < l; i++) {
+            if (ctx.nodeType === 9 || rewrite || isAncestor(r[i], root)) result[result.length] = r[i]
           }
         }))
         return ss.length > 1 && result.length > 1 ? uniq(result) : result
       }
+    , select = supportsCSS3 ? selectCSS3 : doc[qSA] ? selectCSS2qSA : selectNonNative
   
     qwery.uniq = uniq
     qwery.is = is
@@ -463,35 +556,20 @@
   provide("qwery", module.exports);
 
   !function (doc, $) {
-    var q = require('qwery')
-      , table = 'table'
-      , nodeMap = {
-            thead: table
-          , tbody: table
-          , tfoot: table
-          , tr: 'tbody'
-          , th: 'tr'
-          , td: 'tr'
-          , fieldset: 'form'
-          , option: 'select'
-        }
-    function create(node, root) {
-      var tag = /^\s*<([^\s>]+)\s*/.exec(node)[1]
-        , el = (root || doc).createElement(nodeMap[tag] || 'div'), els = []
-  
-      el.innerHTML = node
-      var nodes = el.childNodes
-      el = el.firstChild
-      el.nodeType == 1 && els.push(el)
-      while (el = el.nextSibling) (el.nodeType == 1) && els.push(el)
-      return els
-    }
-  
-    $._select = function (s, r) {
-      return /^\s*</.test(s) ? create(s, r) : q(s, r)
-    }
+    var q = require('qwery'), b
   
     $.pseudos = q.pseudos
+  
+    $._select = function (s, r) {
+      // detect if sibling module 'bonzo' is available at run-time
+      // rather than load-time since technically it's not a dependency and
+      // can be loaded in any order
+      // hence the lazy function re-definition
+      $._select = !(b = require('bonzo')) ? q : function (s, r) {
+        return /^\s*</.test(s) ? b.create(s, r) : q(s, r)
+      }
+      return b && /^\s*</.test(s) ? b.create(s, r) : q(s, r)
+    }
   
     $.ender({
       find: function (s) {
@@ -561,7 +639,7 @@
           , optgroup: option }
       , stateAttributes = /^checked|selected$/
       , ie = /msie/i.test(navigator.userAgent)
-      , uidList = []
+      , uidMap = {}
       , uuids = 0
       , digit = /^-?[\d\.]+$/
       , dattr = /^data-(.+)$/
@@ -604,6 +682,16 @@
       return ar
     }
   
+    function deepEach(ar, fn, scope) {
+      for (var i = 0, l = ar.length; i < l; i++) {
+        if (isNode(ar[i])) {
+          deepEach(ar[i].childNodes, fn, scope);
+          fn.call(scope || ar[i], ar[i], i, ar);
+        }
+      }
+      return ar;
+    }
+  
     function camelize(s) {
       return s.replace(/-(.)/g, function (m, m1) {
         return m1.toUpperCase()
@@ -617,7 +705,12 @@
     function data(el) {
       el[getAttribute]('data-node-uid') || el[setAttribute]('data-node-uid', ++uuids)
       uid = el[getAttribute]('data-node-uid')
-      return uidList[uid] || (uidList[uid] = {})
+      return uidMap[uid] || (uidMap[uid] = {})
+    }
+  
+    function clearData(el) {
+      uid = el[getAttribute]('data-node-uid')
+      uid && (delete uidMap[uid])
     }
   
     function dataValue(d) {
@@ -770,6 +863,10 @@
           return each(this, fn, scope)
         }
   
+      , deepEach: function (fn, scope) {
+          return deepEach(this, fn, scope)
+        }
+  
       , map: function (fn, reject) {
           var m = [], n, i
           for (i = 0; i < this.length; i++) {
@@ -794,13 +891,12 @@
               'textContent' :
             'innerHTML', m;
           function append(el) {
-            while (el.firstChild) el.removeChild(el.firstChild)
             each(normalize(h), function (node) {
               el.appendChild(node)
             })
           }
           return typeof h !== 'undefined' ?
-              this.each(function (el) {
+              this.empty().each(function (el) {
                 !text && (m = el.tagName.match(specialTags)) ?
                   append(el, m[0]) :
                   (el[method] = h)
@@ -937,6 +1033,8 @@
         }
   
       , replaceWith: function(html) {
+          this.deepEach(clearData)
+  
           return this.each(function (el) {
             el.parentNode.replaceChild(bonzo.create(html)[0], el)
           })
@@ -1087,6 +1185,8 @@
         }
   
       , remove: function () {
+          this.deepEach(clearData)
+  
           return this.each(function (el) {
             el[parentNode] && el[parentNode].removeChild(el)
           })
@@ -1094,6 +1194,8 @@
   
       , empty: function () {
           return this.each(function (el) {
+            deepEach(el.childNodes, clearData)
+  
             while (el.firstChild) {
               el.removeChild(el.firstChild)
             }
@@ -1114,9 +1216,9 @@
           return scroll.call(this, x, null, 'x')
         }
   
-      , toggle: function(callback) {
+      , toggle: function (callback, type) {
           this.each(function (el) {
-            el.style.display = (el.offsetWidth || el.offsetHeight) ? 'none' : 'block'
+            el.style.display = (el.offsetWidth || el.offsetHeight) ? 'none' : type || ''
           })
           callback && callback()
           return this
@@ -1258,9 +1360,7 @@
     }
   
     function indexOf(ar, val) {
-      for (var i = 0; i < ar.length; i++) {
-        if (ar[i] === val) return i
-      }
+      for (var i = 0; i < ar.length; i++) if (ar[i] === val) return i
       return -1
     }
   
@@ -1483,13 +1583,10 @@
     },
   
     removeListener = function (element, orgType, handler) {
-      var uid = element.__uid, names, uids, i, events = retrieveEvents(element), type = orgType.replace(stripName, '');
-  
+      var uid, names, uids, i, events = retrieveEvents(element), type = orgType.replace(stripName, '');
       if (!events || !events[type]) {
         return element;
       }
-  
-      handler && handler.__one && (handler = handler.__one)
       names = orgType.replace(namespace, '');
       uids = names ? names.split('.') : [handler.__uid];
   
@@ -1509,15 +1606,6 @@
       destroyHandler(names); //get combos
       for (i = uids.length; i--; destroyHandler(uids[i])) {} //get singles
   
-      if (isEmpty(events[type])) {
-        delete events[type];
-      }
-  
-      if (isEmpty(registry[uid])) {
-        delete registry[uid];
-        delete collected[uid];
-      }
-  
       return element;
     },
   
@@ -1534,34 +1622,19 @@
       };
     },
   
-    _add = function (meth, element, events, fn, delfn, $) {
+    add = function (element, events, fn, delfn, $) {
       if (typeof events == 'object' && !fn) {
         for (var type in events) {
-          events.hasOwnProperty(type) && _add(meth, element, type, events[type]);
+          events.hasOwnProperty(type) && add(element, type, events[type]);
         }
       } else {
         var isDel = typeof fn == 'string', types = (isDel ? fn : events).split(' ');
-        fn = isDel ? del(events, delfn, $) : meth == 'one' ? 
-          function(fn) {
-            var one = function() {
-              remove(element, events, one)
-              fn.apply(this, arguments)
-            }
-            return (fn.__one = one)
-          }(fn) : fn
+        fn = isDel ? del(events, delfn, $) : fn;
         for (var i = types.length; i--;) {
-          addListener(element, types[i], fn, Array.prototype.slice.call(arguments, isDel ? 5 : 4));
+          addListener(element, types[i], fn, Array.prototype.slice.call(arguments, isDel ? 4 : 3));
         }
       }
       return element;
-    },
-  
-    add = function () {
-      return _add.apply(this, ['add'].concat(Array.prototype.slice.call(arguments, 0)))
-    },
-  
-    one = function () {
-      return _add.apply(this, ['one'].concat(Array.prototype.slice.call(arguments, 0)))
     },
   
     remove = function (element, orgEvents, fn) {
@@ -1583,9 +1656,7 @@
           if (attached.hasOwnProperty(k)) {
             for (i in attached[k]) {
               for (m = names.length; m--;) {
-                attached[k].hasOwnProperty(i) &&
-                  new RegExp('^' + names[m] + '::\\d*(\\..*)?$').test(i) &&
-                  rm(element, [k, i].join('.'));
+                attached[k].hasOwnProperty(i) && new RegExp('^' + names[m] + '::\\d*(\\..*)?$').test(i) && rm(element, [k, i].join('.'));
               }
             }
           }
@@ -1682,14 +1753,7 @@
         }
       }
       return result;
-    },
-  
-    isEmpty = function (obj) {
-      for (var prop in obj) {
-        if (obj.hasOwnProperty(prop)) return false;
-      }
-      return true;
-    }
+    };
   
     fixEvent.preventDefault = function (e) {
       return function () {
@@ -1737,7 +1801,7 @@
       mousewheel: { base: /Firefox/.test(navigator.userAgent) ? 'DOMMouseScroll' : 'mousewheel' }
     };
   
-    var bean = { add: add, one: one, remove: remove, clone: clone, fire: fire };
+    var bean = { add: add, remove: remove, clone: clone, fire: fire };
   
     var clean = function (el) {
       var uid = remove(el).__uid;
@@ -1762,9 +1826,7 @@
     };
   
     return bean;
-  
   });
-  
 
   provide("bean", module.exports);
 
@@ -1794,8 +1856,6 @@
       bind: add,
       listen: add,
       delegate: add,
-  
-      one: integrate('one'),
   
       unbind: remove,
       unlisten: remove,
@@ -1829,7 +1889,6 @@
   
     $.ender(methods, true);
   }(ender);
-  
 
 }();
 
@@ -1951,633 +2010,5 @@
   provide("bowser", module.exports);
 
   $.ender(module.exports);
-
-}();
-
-!function () {
-
-  var module = { exports: {} }, exports = module.exports;
-
-  !function (name, definition) {
-    if (typeof define == 'function') define(definition)
-    else if (typeof module != 'undefined') module.exports = definition()
-    else this[name] = this['domReady'] = definition()
-  }('domready', function (ready) {
-  
-    var fns = [], fn, f = false
-      , doc = document
-      , testEl = doc.documentElement
-      , hack = testEl.doScroll
-      , domContentLoaded = 'DOMContentLoaded'
-      , addEventListener = 'addEventListener'
-      , onreadystatechange = 'onreadystatechange'
-      , loaded = /^loade|c/.test(doc.readyState)
-  
-    function flush(f) {
-      loaded = 1
-      while (f = fns.shift()) f()
-    }
-  
-    doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
-      doc.removeEventListener(domContentLoaded, fn, f)
-      flush()
-    }, f)
-  
-  
-    hack && doc.attachEvent(onreadystatechange, (fn = function () {
-      if (/^c/.test(doc.readyState)) {
-        doc.detachEvent(onreadystatechange, fn)
-        flush()
-      }
-    }))
-  
-    return (ready = hack ?
-      function (fn) {
-        self != top ?
-          loaded ? fn() : fns.push(fn) :
-          function () {
-            try {
-              testEl.doScroll('left')
-            } catch (e) {
-              return setTimeout(function() { ready(fn) }, 50)
-            }
-            fn()
-          }()
-      } :
-      function (fn) {
-        loaded ? fn() : fns.push(fn)
-      })
-  })
-
-  provide("domready", module.exports);
-
-  !function ($) {
-    var ready = require('domready')
-    $.ender({domReady: ready})
-    $.ender({
-      ready: function (f) {
-        ready(f)
-        return this
-      }
-    }, true)
-  }(ender);
-
-}();
-
-!function () {
-
-  var module = { exports: {} }, exports = module.exports;
-
-  /*!
-    * Valentine: JavaScript's functional Sister
-    * (c) Dustin Diaz 2011
-    * https://github.com/ded/valentine
-    * License MIT
-    */
-  
-  !function (name, definition) {
-    if (typeof module != 'undefined') module.exports = definition()
-    else if (typeof define == 'function') define(definition)
-    else this[name] = this['v'] = definition()
-  }('valentine', function () {
-  
-    var context = this
-      , old = context.v
-      , ap = []
-      , op = {}
-      , n = null
-      , slice = ap.slice
-      , nativ = 'map' in ap
-      , nativ18 = 'reduce' in ap
-      , trimReplace = /(^\s*|\s*$)/g
-      , iters = {
-      each: nativ ?
-        function (a, fn, scope) {
-          ap.forEach.call(a, fn, scope)
-        } :
-        function (a, fn, scope) {
-          for (var i = 0, l = a.length; i < l; i++) {
-            i in a && fn.call(scope, a[i], i, a)
-          }
-        }
-  
-    , map: nativ ?
-        function (a, fn, scope) {
-          return ap.map.call(a, fn, scope)
-        } :
-        function (a, fn, scope) {
-          var r = [], i
-          for (i = 0, l = a.length; i < l; i++) {
-            i in a && (r[i] = fn.call(scope, a[i], i, a))
-          }
-          return r
-        }
-  
-    , some: nativ ?
-        function (a, fn, scope) {
-          return a.some(fn, scope)
-        } :
-        function (a, fn, scope) {
-          for (var i = 0, l = a.length; i < l; i++) {
-            if (i in a && fn.call(scope, a[i], i, a)) return true
-          }
-          return false
-        }
-  
-    , every: nativ ?
-        function (a, fn, scope) {
-          return a.every(fn, scope)
-        } :
-        function (a, fn, scope) {
-          for (var i = 0, l = a.length; i < l; i++) {
-            if (i in a && !fn.call(scope, a[i], i, a)) return false
-          }
-          return true
-        }
-  
-    , filter: nativ ?
-        function (a, fn, scope) {
-          return a.filter(fn, scope)
-        } :
-        function (a, fn, scope) {
-          for (var r = [], i = 0, j = 0, l = a.length; i < l; i++) {
-            if (i in a) {
-              if (!fn.call(scope, a[i], i, a)) continue;
-              r[j++] = a[i]
-            }
-          }
-          return r
-        }
-  
-    , indexOf: nativ ?
-        function (a, el, start) {
-          return a.indexOf(el, isFinite(start) ? start : 0)
-        } :
-        function (a, el, start) {
-          start = start || 0
-          for (var i = 0; i < a.length; i++) {
-            if (i in a && a[i] === el) return i
-          }
-          return -1
-        }
-  
-    , lastIndexOf: nativ ?
-        function (a, el, start) {
-          return a.lastIndexOf(el, isFinite(start) ? start : a.length)
-        } :
-        function (a, el, start) {
-          start = start || a.length
-          start = start >= a.length ? a.length :
-            start < 0 ? a.length + start : start
-          for (var i = start; i >= 0; --i) {
-            if (i in a && a[i] === el) {
-              return i
-            }
-          }
-          return -1
-        }
-  
-    , reduce: nativ18 ?
-        function (o, i, m, c) {
-          return ap.reduce.call(o, i, m, c);
-        } :
-        function (obj, iterator, memo, context) {
-          if (!obj) obj = []
-          var i = 0, l = obj.length
-          if (arguments.length < 3) {
-            do {
-              if (i in obj) {
-                memo = obj[i++]
-                break;
-              }
-              if (++i >= l) {
-                throw new TypeError('Empty array')
-              }
-            } while (1)
-          }
-          for (; i < l; i++) {
-            if (i in obj) {
-              memo = iterator.call(context, memo, obj[i], i, obj)
-            }
-          }
-          return memo
-        }
-  
-    , reduceRight: nativ18 ?
-        function (o, i, m, c) {
-          return ap.reduceRight.call(o, i, m, c)
-        } :
-        function (obj, iterator, memo, context) {
-          !obj && (obj = [])
-          var l = obj.length, i = l - 1
-          if (arguments.length < 3) {
-            do {
-              if (i in obj) {
-                memo = obj[i--]
-                break;
-              }
-              if (--i < 0) {
-                throw new TypeError('Empty array')
-              }
-            } while (1)
-          }
-          for (; i >= 0; i--) {
-            if (i in obj) {
-              memo = iterator.call(context, memo, obj[i], i, obj)
-            }
-          }
-          return memo
-        }
-  
-    , find: function (obj, iterator, context) {
-        var result
-        iters.some(obj, function (value, index, list) {
-          if (iterator.call(context, value, index, list)) {
-            result = value
-            return true
-          }
-        })
-        return result
-      }
-  
-    , reject: function (a, fn, scope) {
-        var r = []
-        for (var i = 0, j = 0, l = a.length; i < l; i++) {
-          if (i in a) {
-            if (fn.call(scope, a[i], i, a)) {
-              continue;
-            }
-            r[j++] = a[i]
-          }
-        }
-        return r
-      }
-  
-    , size: function (a) {
-        return o.toArray(a).length
-      }
-  
-    , compact: function (a) {
-        return iters.filter(a, function (value) {
-          return !!value
-        })
-      }
-  
-    , flatten: function (a) {
-        return iters.reduce(a, function (memo, value) {
-          if (is.arr(value)) {
-            return memo.concat(iters.flatten(value))
-          }
-          memo[memo.length] = value
-          return memo
-        }, [])
-      }
-  
-    , uniq: function (ar) {
-        var a = [], i, j
-        label:
-        for (i = 0; i < ar.length; i++) {
-          for (j = 0; j < a.length; j++) {
-            if (a[j] == ar[i]) {
-              continue label
-            }
-          }
-          a[a.length] = ar[i]
-        }
-        return a
-      }
-  
-    , merge: function (one, two) {
-        var i = one.length, j = 0, l
-        if (isFinite(two.length)) {
-          for (l = two.length; j < l; j++) {
-            one[i++] = two[j]
-          }
-        } else {
-          while (two[j] !== undefined) {
-            first[i++] = second[j++]
-          }
-        }
-        one.length = i
-        return one
-      }
-  
-    , inArray: function (ar, needle) {
-        return !!~iters.indexOf(ar, needle)
-      }
-  
-    }
-  
-    var is = {
-      fun: function (f) {
-        return typeof f === 'function'
-      }
-  
-    , str: function (s) {
-        return typeof s === 'string'
-      }
-  
-    , ele: function (el) {
-        !!(el && el.nodeType && el.nodeType == 1)
-      }
-  
-    , arr: function (ar) {
-        return ar instanceof Array
-      }
-  
-    , arrLike: function (ar) {
-        return (ar && ar.length && isFinite(ar.length))
-      }
-  
-    , num: function (n) {
-        return typeof n === 'number'
-      }
-  
-    , bool: function (b) {
-        return (b === true) || (b === false)
-      }
-  
-    , args: function (a) {
-        return !!(a && op.hasOwnProperty.call(a, 'callee'))
-      }
-  
-    , emp: function (o) {
-        var i = 0
-        return is.arr(o) ? o.length === 0 :
-          is.obj(o) ? (function () {
-            for (var k in o) {
-              i++
-              break;
-            }
-            return (i === 0)
-          }()) :
-          o === ''
-      }
-  
-    , dat: function (d) {
-        return !!(d && d.getTimezoneOffset && d.setUTCFullYear)
-      }
-  
-    , reg: function (r) {
-        return !!(r && r.test && r.exec && (r.ignoreCase || r.ignoreCase === false))
-      }
-  
-    , nan: function (n) {
-        return n !== n
-      }
-  
-    , nil: function (o) {
-        return o === n
-      }
-  
-    , und: function (o) {
-        return typeof o === 'undefined'
-      }
-  
-    , def: function (o) {
-        return typeof o !== 'undefined'
-      }
-  
-    , obj: function (o) {
-        return o instanceof Object && !is.fun(o) && !is.arr(o)
-      }
-    }
-  
-    var o = {
-      each: function (a, fn, scope) {
-        is.arrLike(a) ?
-          iters.each(a, fn, scope) : (function () {
-            for (var k in a) {
-              op.hasOwnProperty.call(a, k) && fn.call(scope, k, a[k], a)
-            }
-          }())
-      }
-  
-    , map: function (a, fn, scope) {
-        var r = [], i = 0
-        return is.arrLike(a) ?
-          iters.map(a, fn, scope) : !function () {
-            for (var k in a) {
-              op.hasOwnProperty.call(a, k) && (r[i++] = fn.call(scope, k, a[k], a))
-            }
-          }() && r
-      }
-  
-    , pluck: function (a, k) {
-        return is.arrLike(a) ?
-          iters.map(a, function (el) {
-            return el[k]
-          }) :
-          o.map(a, function (_, v) {
-            return v[k]
-          })
-      }
-  
-    , toArray: function (a) {
-        if (!a) return []
-  
-        if (is.arr(a)) return a
-  
-        if (a.toArray) return a.toArray()
-  
-        if (is.args(a)) return slice.call(a)
-  
-        return iters.map(a, function (k) {
-          return k
-        })
-      }
-  
-    , first: function (a) {
-        return a[0]
-      }
-  
-    , last: function (a) {
-        return a[a.length - 1]
-      }
-  
-    , keys: Object.keys ?
-        function (o) {
-          return Object.keys(o)
-        } :
-        function (obj) {
-          var keys = [], key
-          for (key in obj) if (op.hasOwnProperty.call(obj, key)) keys[keys.length] = key
-          return keys
-        }
-  
-    , values: function (ob) {
-        return o.map(ob, function (k, v) {
-          return v
-        })
-      }
-  
-    , extend: function () {
-        // based on jQuery deep merge
-        var options, name, src, copy, clone
-          , target = arguments[0], i = 1, length = arguments.length
-  
-        for (; i < length; i++) {
-          if ((options = arguments[i]) !== n) {
-            // Extend the base object
-            for (name in options) {
-              src = target[name]
-              copy = options[name]
-              if (target === copy) {
-                continue;
-              }
-              if (copy && (is.obj(copy))) {
-                clone = src && is.obj(src) ? src : {}
-                target[name] = o.extend(clone, copy);
-              } else if (copy !== undefined) {
-                target[name] = copy
-              }
-            }
-          }
-        }
-        return target
-      }
-  
-    , trim: String.prototype.trim ?
-        function (s) {
-          return s.trim()
-        } :
-        function (s) {
-          return s.replace(trimReplace, '')
-        }
-  
-    , bind: function (scope, fn) {
-        return function () {
-          fn.apply(scope, arguments)
-        }
-      }
-  
-    , parallel: function (fns, callback) {
-        var args = o.toArray(arguments)
-          , len = 0
-          , returns = []
-  
-        if (!is.arr(fns)) {
-          callback = args.pop()
-          fns = args
-        }
-  
-        iters.each(fns, function (el, i) {
-          el(function () {
-            var a = o.toArray(arguments)
-              , e = a.shift()
-            if (e) return callback(e)
-            returns[i] = a
-            if (fns.length == ++len) {
-              returns.unshift(n)
-              callback.apply(n, iters.flatten(returns))
-            }
-          })
-        })
-      }
-  
-    , waterfall: function (fns, callback) {
-        var args = o.toArray(arguments)
-          , index = 0
-        if (!is.arr(fns)) {
-          callback = args.pop()
-          fns = args
-        }
-        (function f() {
-          var args = o.toArray(arguments)
-          args.push(f)
-          var err = args.shift()
-          if (!err && fns.length) fns.shift().apply(n, args)
-          else {
-            args.pop()
-            args.unshift(err)
-            callback.apply(n, args)
-          }
-        }(n))
-      }
-    , queue: function (ar) {
-        return new Queue(is.arrLike(ar) ? ar : o.toArray(arguments))
-      }
-    }
-  
-    function Queue (a) {
-      this.values = a
-      this.index = 0
-    }
-  
-    Queue.prototype.next = function () {
-      this.index < this.values.length && this.values[this.index++]()
-      return this
-    }
-  
-    function v(a, scope) {
-      return new Valentine(a, scope)
-    }
-  
-    function aug(o, o2) {
-      for (var k in o2) o[k] = o2[k]
-    }
-  
-    aug(v, iters)
-    aug(v, o)
-    v.is = is
-  
-    v.v = v // vainglory
-  
-    // peoples like the object style
-    function Valentine(a, scope) {
-      this.val = a
-      this._scope = scope || n
-      this._chained = 0
-    }
-  
-    v.each(v.extend({}, iters, o), function (name, fn) {
-      Valentine.prototype[name] = function () {
-        var a = v.toArray(arguments)
-        a.unshift(this.val)
-        var ret = fn.apply(this._scope, a)
-        this.val = ret
-        return this._chained ? this : ret
-      }
-    })
-  
-    // people like chaining
-    aug(Valentine.prototype, {
-      chain: function () {
-        this._chained = 1
-        return this
-      }
-    , value: function () {
-        return this.val
-      }
-    })
-  
-  
-    v.noConflict = function () {
-      context.v = old
-      return this
-    }
-  
-    return v
-  })
-
-  provide("valentine", module.exports);
-
-  var v = require('valentine')
-  ender.ender(v)
-  ender.ender({
-      merge: v.merge
-    , extend: v.extend
-    , each: v.each
-    , map: v.map
-    , toArray: v.toArray
-    , keys: v.keys
-    , values: v.values
-    , trim: v.trim
-    , bind: v.bind
-    , parallel: v.parallel
-    , waterfall: v.waterfall
-    , inArray: v.inArray
-    , queue: v.queue
-  })
 
 }();

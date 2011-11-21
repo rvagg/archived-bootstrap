@@ -5,22 +5,20 @@ This is a simple fork of https://github.com/twitter/bootstrap with some changes 
 
 Changes can be seen here: https://github.com/rvagg/bootstrap/compare/master...ender
 
-Requires an Ender build with qwery, bonzo, bean, bowser, domready & valentine
+Requires an Ender build with the **Jeesh** + Bowser (i.e. domReady, Qwery, Bonzo, Bean & Bowser)
 
 Status
 ------
 
-It's almost all working, I'm just waiting on [@ded](https://github.com/ded/) to push a new bowser release with a `mozilla` alias and for [@fat](https://github.com/fat/) to accept a pull request on bean for `one()` support.
+The port is complete, minus any un-found bugs which I trust you will put in a pull-request to fix for us. Tested in IE7+ and the other usual suspects.
 
-However, a fully working build of ender with my latest can be found inside js/tests/vendor/
-
-There are some use cases that aren't supported as well:
+At least one use-case that isn't supported is:
 
 ```js
 $("a[rel=twipsy]").twipsy({ live: true })
 ```
 
-won't work for example because we don't have `live()` in bean yet. Just call `twipsy()` and it'll work.
+This won't work because we don't have `live()` in bean, it's been deprecated in jQuery anyway. Just call `twipsy()` and it'll work.
 
 See docs/javascript.html for an updated example using the Ender version and for details on what changes were made
 to get it working see the diff: https://github.com/rvagg/bootstrap/compare/master...ender#diff-1
@@ -38,7 +36,7 @@ ender build ender-twitter-bootstrap
 
 and you'll get the dependencies packed too.
 
-Alternatively you'll find a *build.sh* script in the *js* directory that you can use to build *bootstrap-ender.js* yourself.
+Alternatively you'll find a *build.sh* script in the *js/ender* directory that you can use to build *bootstrap-ender.js* yourself.
 
 Me
 --
@@ -48,13 +46,14 @@ Me
 + http://twitter.com/rvagg
 + http://github.com/rvagg
 
+*(I can't take any credit for of the brilliance of Bootstrap itself, just the humble Ender port)*
 
 ORIGINAL BOOTSTRAP INFO
 =======================
 
 (Please visit https://github.com/twitter/bootstrap for complete info)
 
-Authors
+Bootstrap Authors
 -------
 
 **Mark Otto**
