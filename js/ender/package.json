@@ -6,9 +6,8 @@
   , "author": "Rod Vagg"
   , "contributors": [ "@mdo", "@fat"]
   , "dependencies": {
-       "qwery": "*", "bonzo": "*", "bean": "*", "bowser": "*", "domready": "*", "valentine": "*"
+       "qwery": "*", "bonzo": "*", "bean": "*", "bowser": "*", "domready": "*"
     }
   , "main"          : "bootstrap-ender.js"
-  , "ender"         : "noop"
-  , "version"       : "1.4.0"
+  , "version"       : "1.4.1"
 }
