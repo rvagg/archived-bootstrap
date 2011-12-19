@@ -9,5 +9,5 @@
        "qwery": "*", "bonzo": "*", "bean": "*", "bowser": "*", "domready": "*"
     }
   , "main"          : "bootstrap-ender.js"
-  , "version"       : "1.4.1"
+  , "version"       : "1.4.2"
 }
