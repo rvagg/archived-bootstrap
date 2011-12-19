@@ -12,9 +12,16 @@
     <![endif]-->
 
     <!-- Le javascript -->
+    <!-- Le jQuery, bleh!
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+    -->
+    <!-- Le Ender, mwah! -->
+    <script src="1.4.0/ender/ender.js"></script>
     <script src="assets/js/google-code-prettify/prettify.js"></script>
-    <script>$(function () { prettyPrint() })</script>
+    <script>$.domReady(function () { prettyPrint() })</script>
+    <!-- Le Ender version! -->
+    <script src="1.4.0/ender/bootstrap-ender.js"></script>
+    <!-- Le jQuery version, pfft!
     <script src="1.4.0/bootstrap-modal.js"></script>
     <script src="1.4.0/bootstrap-alerts.js"></script>
     <script src="1.4.0/bootstrap-twipsy.js"></script>
@@ -23,6 +30,7 @@
     <script src="1.4.0/bootstrap-scrollspy.js"></script>
     <script src="1.4.0/bootstrap-tabs.js"></script>
     <script src="1.4.0/bootstrap-buttons.js"></script>
+    -->
 
     <!-- Le styles -->
     <link href="1.4.0/bootstrap.css" rel="stylesheet">
@@ -350,7 +358,7 @@ $('#my-modal').bind('hidden', function () {
           <button id="fat-btn" data-loading-text="loading..." class="btn danger">Loading Demo</button>
           <button class="btn" data-toggle="toggle">Toggle Demo</button>
           <script>
-            $(function() {
+            $.domReady(function() {
               var btn = $('#fat-btn').click(function () {
                 btn.button('loading')
                 setTimeout(function () {
@@ -403,7 +411,7 @@ $('#my-modal').bind('hidden', function () {
 &lt;/div&gt;
 
 &lt;script&gt;
-  $(function () {
+  $.domReady(function () {
     $('.tabs').tabs()
   })
 &lt;/script&gt;</pre>
@@ -582,9 +590,9 @@ $('#.tabs').bind('change', function (e) {
             </p>
           </div>
           <script>
-            $(function () {
+            $.domReady(function () {
               $("a[rel=twipsy]").twipsy({
-                live: true
+                //live: true
               })
             })
           </script>
@@ -707,7 +715,7 @@ $('#.tabs').bind('change', function (e) {
           <h3>Demo</h3>
           <a href="#" class="btn danger" rel="popover" title="A title" data-content="And here's some amazing content. It's very engaging. right?">hover for popover</a>
           <script>
-            $(function () {
+            $.domReady(function () {
               $("a[rel=popover]")
                 .popover({
                   offset: 10
