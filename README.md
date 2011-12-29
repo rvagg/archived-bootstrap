@@ -1,89 +1,62 @@
-TWITTER BOOTSTRAP
-=================
+TWITTER BOOTSTRAP FOR ENDER
+===========================
 
-Bootstrap is Twitter's toolkit for kickstarting CSS for websites, apps, and more. It includes base CSS styles for typography, forms, buttons, tables, grids, navigation, alerts, and more.
+Look ma', no jQuery!
+--------------------
 
-To get started -- checkout http://twitter.github.com/bootstrap!
+This is a simple port of https://github.com/twitter/bootstrap with some changes to support use with Ender without jQuery.
 
+It simply requires an Ender build with the Jeesh + Bowser (i.e. domReady, Qwery, Bonzo, Bean & Bowser)
 
-Usage
------
+**ender-twitter-bootstrap** is available in NPM so to build with Ender simply run `ender build ender-twitter-bootstrap`.
 
-You can use Twitter Bootstrap in one of two ways: just drop the compiled CSS into any new project and start cranking, or run LESS on your site and compile on the fly like a boss.
+Status
+------
 
-Here's what the LESS version looks like:
+The port is complete, minus any un-found bugs which I trust you will put in a pull-request to fix for the rest of us. Tested in IE7+ and the other usual suspects.
 
-``` html
-<link rel="stylesheet/less" type="text/css" href="lib/bootstrap.less">
-<script src="less.js" type="text/javascript"></script>
+The approach taken is to touch the original Bootstrap files as little as possible and just wrap them in a *copy* of Ender with a bunch of shims applied that fix up anything that Bootstrap is expecting from jQuery that Ender doesn't have or do (not a whole lot). So keeping the port up to date with the latest Bootstrap code is relatively easy.
+
+At least one use-case that isn't supported is:
+$("a[rel=twipsy]").twipsy({ live: true })
 ```
 
-Or if you prefer, the standard CSS way:
+This won't work because we don't have `live()` in bean, it's been deprecated in jQuery anyway. Just call `twipsy()` and it'll work.
 
-``` html
-<link rel="stylesheet" type="text/css" href="bootstrap.css">
+See docs/javascript.html for an updated example using the Ender version and for details on what changes were made
+to get it working see the diff: https://github.com/rvagg/bootstrap/compare/master...ender#diff-1
+
+**A live example can be found at http://rvagg.github.com/bootstrap/docs/javascript.html** with zero jQueryness.
+
+Installing
+----------
+
+You can install this directly into an ender build with:
+
+```
+ender build ender-twitter-bootstrap
 ```
 
-For more info, refer to the docs!
+and you'll get the dependencies packed too.
 
+Alternatively you'll find a *build.sh* script in the *js/ender* directory that you can use to build *bootstrap-ender.js* yourself.
 
-Versioning
-----------
+Me
+--
 
-For transparency and insight into our release cycle, and for striving to maintain backwards compatibility, Bootstrap will be maintained under the Semantic Versioning guidelines as much as possible.
+**Rod Vagg**
 
-Releases will be numbered with the follow format:
++ http://twitter.com/rvagg
++ http://github.com/rvagg
 
-`<major>.<minor>.<patch>`
+*(I can't take any credit for of the brilliance of Bootstrap itself, just the humble Ender port)*
 
-And constructed with the following guidelines:
+ORIGINAL BOOTSTRAP INFO
+=======================
 
-* Breaking backwards compatibility bumps the major
-* New additions without breaking backwards compatibility bumps the minor
-* Bug fixes and misc changes bump the patch
+(Please visit https://github.com/twitter/bootstrap for complete info)
 
-For more information on SemVer, please visit http://semver.org/.
-
-
-Bug tracker
------------
-
-Have a bug? Please create an issue here on GitHub!
-
-https://github.com/twitter/bootstrap/issues
-
-
-Twitter account
----------------
-
-Keep up to date on announcements and more by following Bootstrap on Twitter, <a href="http://twitter.com/TwBootstrap">@TwBootstrap</a>.
-
-
-Mailing list
-------------
-
-Have a question? Ask on our mailing list!
-
-twitter-bootstrap@googlegroups.com
-
-http://groups.google.com/group/twitter-bootstrap
-
-
-Developers
-----------
-
-We have included a makefile with convenience methods for working with the Bootstrap library.
-
-+ **build** - `make build`
-This will run the less compiler on the bootstrap lib and generate a bootstrap.css and bootstrap.min.css file.
-The lessc compiler is required for this command to run.
-
-+ **watch** - `make watch`
-This is a convenience method for watching your less files and automatically building them whenever you save.
-Watchr is required for this command to run.
-
-
-Authors
+Bootstrap Authors
 -------
 
 **Mark Otto**
