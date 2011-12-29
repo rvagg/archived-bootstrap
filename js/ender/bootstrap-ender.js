@@ -1086,7 +1086,7 @@ var enderOrig = ender
     setContent: function () {
       var $tip = this.tip()
       $tip.find('.title')[this.options.html ? 'html' : 'text'](this.getTitle())
-      $tip.find('.content div')[this.options.html ? 'html' : 'text'](this.getContent())
+      $tip.find('.content > *')[this.options.html ? 'html' : 'text'](this.getContent())
       $tip[0].className = 'popover'
     }
 
@@ -1100,10 +1100,11 @@ var enderOrig = ender
        , o = this.options
 
       if (typeof this.options.content == 'string') {
-        content = this.options.content
+        content = $e.attr(this.options.content)
       } else if (typeof this.options.content == 'function') {
         content = this.options.content.call(this.$element[0])
       }
+
       return content
     }
 
@@ -1129,8 +1130,11 @@ var enderOrig = ender
 
   $.fn.popover.defaults = $.extend({} , $.fn.twipsy.defaults, {
     placement: 'right'
-  , template: '<div class="arrow"></div><div class="inner"><h3 class="title"></h3><div class="content"><div></div></div></div>'
+  , content: 'data-content'
+  , template: '<div class="arrow"></div><div class="inner"><h3 class="title"></h3><div class="content"><p></p></div></div>'
   })
+
+  $.fn.twipsy.rejectAttrOptions.push( 'content' )
 
 }( window.jQuery || window.ender );
 
