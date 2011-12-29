@@ -1,4 +1,4 @@
-$(document).ready(function () {
+$(function () {
 
     module("bootstrap-tabs")
 
@@ -11,45 +11,46 @@ $(document).ready(function () {
       })
 
       test("should activate element by tab id", function () {
-        var $tabsHTML = $("#qunit-runoff").append($('<ul class="tabs" id="testtabs">'
+        var $tabsHTML = $('<ul class="tabs">'
           + '<li class="active"><a href="#home">Home</a></li>'
           + '<li><a href="#profile">Profile</a></li>'
-          + '</ul>'))
+          + '</ul>')
 
 
         $('<ul><li id="home"></li><li id="profile"></li></ul>').appendTo("#qunit-runoff")
 
         $tabsHTML.tabs().find('a').last().click()
-        equals($("#qunit-runoff").find('.active').last().attr('id'), "profile")
+        equals($("#qunit-runoff").find('.active').attr('id'), "profile")
 
         $tabsHTML.tabs().find('a').first().click()
-        equals($("#qunit-runoff").find('.active').last().attr('id'), "home")
+        equals($("#qunit-runoff").find('.active').attr('id'), "home")
 
         $("#qunit-runoff").empty()
       })
 
       test("should activate element by pill id", function () {
-        var $pillsHTML = $("#qunit-runoff").append($('<ul class="pills">'
+        var $pillsHTML = $('<ul class="pills">'
           + '<li class="active"><a href="#home">Home</a></li>'
           + '<li><a href="#profile">Profile</a></li>'
-          + '</ul>'))
+          + '</ul>')
+
 
         $('<ul><li id="home"></li><li id="profile"></li></ul>').appendTo("#qunit-runoff")
 
         $pillsHTML.pills().find('a').last().click()
-        equals($("#qunit-runoff").find('.active').last().attr('id'), "profile")
+        equals($("#qunit-runoff").find('.active').attr('id'), "profile")
 
         $pillsHTML.pills().find('a').first().click()
-        equals($("#qunit-runoff").find('.active').last().attr('id'), "home")
+        equals($("#qunit-runoff").find('.active').attr('id'), "home")
 
         $("#qunit-runoff").empty()
       })
 
       test( "should trigger change event on activate", function () {
-        var $tabsHTML = $("#qunit-runoff").append($('<ul class="tabs">'
+        var $tabsHTML = $('<ul class="tabs">'
           + '<li class="active"><a href="#home">Home</a></li>'
           + '<li><a href="#profile">Profile</a></li>'
-          + '</ul>')).find('.tabs')
+          + '</ul>')
           , $target
           , count = 0
           , relatedTarget
@@ -71,8 +72,6 @@ $(document).ready(function () {
         equals(relatedTarget, $tabsHTML.find('a').first()[0])
         equals(target, $target[0])
         equals(count, 1)
-
-	$("#qunit-runoff").empty()
       })
 
 })

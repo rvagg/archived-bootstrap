@@ -1,4 +1,4 @@
-$(document).ready(function () {
+$(function () {
 
   module("bootstrap-modal")
 
@@ -37,14 +37,12 @@ $(document).ready(function () {
        div
          .modal()
          .bind("shown", function () {
-           var mt = $('#modal-test')
-           ok(mt.length, 'modal insterted into dom')
-           ok(mt[0].offsetHeight !== 0 || mt[0].offsetWidth !== 0, 'modal visible')
+           ok($('#modal-test').is(":visible"), 'modal visible')
+           ok($('#modal-test').length, 'modal insterted into dom')
            div.modal("hide")
          })
          .bind("hidden", function() {
-           var mt = $('#modal-test')
-           ok(mt[0].offsetHeight === 0 && mt[0].offsetWidth === 0, 'modal not visible')
+           ok(!$('#modal-test').is(":visible"), 'modal hidden')
            start()
            div.remove()
          })
@@ -58,14 +56,12 @@ $(document).ready(function () {
        div
          .modal()
          .bind("shown", function () {
-           var mt = $('#modal-test')
-           ok(mt.length, 'modal insterted into dom')
-           ok(mt[0].offsetHeight !== 0 || mt[0].offsetWidth !== 0, 'modal visible')
+           ok($('#modal-test').is(":visible"), 'modal visible')
+           ok($('#modal-test').length, 'modal insterted into dom')
            div.modal("toggle")
          })
          .bind("hidden", function() {
-           var mt = $('#modal-test')
-           ok(mt[0].offsetHeight === 0 && mt[0].offsetWidth === 0, 'modal not visible')
+           ok(!$('#modal-test').is(":visible"), 'modal hidden')
            start()
            div.remove()
          })
@@ -79,14 +75,12 @@ $(document).ready(function () {
        div
          .modal()
          .bind("shown", function () {
-           var mt = $('#modal-test')
-           ok(mt.length, 'modal insterted into dom')
-           ok(mt[0].offsetHeight !== 0 || mt[0].offsetWidth !== 0, 'modal visible')
+           ok($('#modal-test').is(":visible"), 'modal visible')
+           ok($('#modal-test').length, 'modal insterted into dom')
            div.find('.close').click()
          })
          .bind("hidden", function() {
-           var mt = $('#modal-test')
-           ok(mt[0].offsetHeight === 0 && mt[0].offsetWidth === 0, 'modal not visible')
+           ok(!$('#modal-test').is(":visible"), 'modal hidden')
            start()
            div.remove()
          })
