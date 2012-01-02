@@ -5,8 +5,8 @@
   , "keywords": ["twitter", "bootstrap", "ender"]
   , "authors": ["Jacob Thornton <@fat>", "Mark Otto <@mdo>", "Rod Vagg <@rvagg>"]
   , "dependencies": {
-       "qwery": "*", "bonzo": "*", "bowser": "*", "domready": "*"
+       "bonzo": "*", "bowser": "*", "domready": "*"
     }
   , "main"          : "bootstrap-ender.js"
-  , "version"       : "1.4.3"
+  , "version"       : "1.4.4"
 }

@@ -6,7 +6,7 @@ Look ma', no jQuery!
 
 This is a simple port of https://github.com/twitter/bootstrap with some changes to support use with Ender without jQuery.
 
-It simply requires an Ender build with the Jeesh + Bowser (i.e. domReady, Qwery, Bonzo, Bean & Bowser)
+It simply requires an Ender build with the Jeesh + Bowser (i.e. domReady, Qwery, Bonzo, Bean & Bowser, although Qwery is optional if you wish to use a different selector engine)
 
 **ender-twitter-bootstrap** is available in NPM so to build with Ender simply run `ender build ender-twitter-bootstrap`.
 
