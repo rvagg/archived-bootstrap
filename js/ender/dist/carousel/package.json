@@ -1,0 +1,23 @@
+{
+  "name": "ender-bootstrap-carousel",
+  "description": "Ender version of Twitter's Bootstrap JS - original by @fat & @mdo",
+  "url": "https://github.com/rvagg/bootstrap",
+  "keywords": [
+    "twitter",
+    "bootstrap",
+    "ender"
+  ],
+  "authors": [
+    "Jacob Thornton <@fat>",
+    "Mark Otto <@mdo>",
+    "Rod Vagg <@rvagg>"
+  ],
+  "dependencies": {
+    "qwery": "*",
+    "bonzo": "*",
+    "bowser": "*",
+    "domready": "*"
+  },
+  "main": "carousel.js",
+  "version": "0.0.1"
+}

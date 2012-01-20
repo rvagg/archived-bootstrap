@@ -1,7 +1,7 @@
 /*!
   * =============================================================
   * Ender: open module JavaScript framework (https://ender.no.de)
-  * Build: ender build bowser /home/rvagg/git/domready /home/rvagg/git/bean/ bonzo qwery
+  * Build: ender build bowser domready /home/rvagg/git/bean/ bonzo /home/rvagg/git/qwery/
   * =============================================================
   */
 
@@ -232,7 +232,7 @@
   
     function flush(f) {
       loaded = 1
-      while (f = fns.shift()) { try { f() } catch(e) {} }
+      while (f = fns.shift()) try { f() } catch(e) {}
     }
   
     doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
