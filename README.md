@@ -1,3 +1,18 @@
+A quick note on version 2.0
+---------------------
+I've started work on porting 2.0 to Ender
+already but it's taking longer than I hoped due to the major changes in
+the twitter 2.0 branch and the fact that I'm heading in a different
+direction for the build process.
+
+The new build process will be a script that edits the plugin files
+according to regex rules and creates Ender compatible modules. I'll also
+be publishing the plugins separately to NPM so you only have to install
+the ones you need rather than the whole hog, like my v1 port.
+
+If you'd like to help then check out my ender-2.0-wip branch.
+
+
 TWITTER BOOTSTRAP FOR ENDER
 ===========================
 
