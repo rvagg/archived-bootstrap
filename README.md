@@ -1,16 +1,11 @@
 A quick note on version 2.0
 ---------------------
-I've started work on porting 2.0 to Ender
-already but it's taking longer than I hoped due to the major changes in
-the twitter 2.0 branch and the fact that I'm heading in a different
-direction for the build process.
+Version 2.0 is almost complete but it's a very different project.
+Instead of a direct fork I have a build app that does the conversion and
+packaging. Plus, the plugins are all in NPM separately if you don't want
+them all.
 
-The new build process will be a script that edits the plugin files
-according to regex rules and creates Ender compatible modules. I'll also
-be publishing the plugins separately to NPM so you only have to install
-the ones you need rather than the whole hog, like my v1 port.
-
-If you'd like to help then check out my ender-2.0-wip branch.
+**See https://github.com/rvagg/ender-bootstrap for v2.0 details**
 
 
 TWITTER BOOTSTRAP FOR ENDER
